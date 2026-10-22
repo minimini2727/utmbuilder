@@ -132,7 +132,39 @@ table.list .camp{font-weight:600}
 .edit-banner.on{display:flex}
 #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:600;font-size:13px;opacity:0;pointer-events:none;transition:all .2s;z-index:100}
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.bgrid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+.step-n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;margin-right:8px;vertical-align:1px}
+.sec-title .step-n{margin-right:0}
+.media-list{display:flex;flex-wrap:wrap;gap:6px}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 6px 6px 10px;border-radius:8px;background:var(--accent-weak);color:var(--accent);font-family:var(--mono);font-size:12px;font-weight:600}
+.pill em{font-style:normal;font-family:Pretendard,sans-serif;font-weight:500;font-size:11px;color:var(--muted)}
+.pill button{border:0;background:transparent;color:inherit;cursor:pointer;font-size:15px;line-height:1;padding:0 4px}
+.tools-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.tool{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2)}
+.tool b{font-size:12px;color:var(--muted);margin-right:2px}
+.tool select,.tool input{width:auto;min-width:0;padding:5px 8px;font-size:12.5px}
+.tool input{width:150px}
+.grid-wrap{max-height:64vh;overflow:auto;border:1px solid var(--border);border-radius:var(--radius)}
+table.xgrid{width:100%;border-collapse:collapse;font-size:12.5px;min-width:1300px}
+table.xgrid th{position:sticky;top:0;z-index:2;background:var(--surface-2);text-align:left;font-weight:700;color:var(--muted);font-size:12px;padding:9px 6px;border-bottom:1px solid var(--border);white-space:nowrap}
+table.xgrid td{padding:3px 4px;border-bottom:1px solid var(--border);vertical-align:middle}
+table.xgrid td.idx{color:var(--muted);font-size:11.5px;text-align:center}
+table.xgrid .cell{width:100%;padding:6px 7px;border:1px solid transparent;border-radius:6px;background:transparent;font-size:12.5px;box-shadow:none}
+table.xgrid .cell:hover{border-color:var(--border)}
+table.xgrid .cell:focus{border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 2px var(--accent-weak)}
+table.xgrid .cell.bad{border-color:var(--danger);background:var(--danger-weak)}
+table.xgrid td.fin{font-family:var(--mono);font-size:11px;color:var(--muted);word-break:break-all;line-height:1.45}
+table.xgrid:not(.show-ext) .ext{display:none}
+table.xgrid tr:hover td{background:color-mix(in srgb,var(--accent-weak) 30%,transparent)}
+.summary{display:flex;flex-wrap:wrap;gap:6px}
+.summary span{padding:4px 10px;border-radius:999px;background:var(--surface-2);font-size:12px;color:var(--muted)}
+.summary b{color:var(--text)}
+.summary .s-ok b{color:var(--ok)}.summary .s-err b{color:var(--danger)}.summary .s-warn b{color:var(--warn)}
+.callout{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:18px;padding:14px 16px;border-radius:10px;background:var(--accent-weak)}
+.callout b{display:block;font-size:13.5px}
+.callout span{font-size:12.5px;color:var(--muted)}
 @media (max-width:900px){
+  .bgrid2{grid-template-columns:1fr}
   .grid{grid-template-columns:1fr}.sticky{position:static}
   .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
@@ -153,6 +185,7 @@ table.list .camp{font-weight:600}
     <div class="logo"><i>UTM</i>UTM 빌더 <small>GA4 기준</small></div>
     <nav>
       <button data-view="builder" class="on">생성</button>
+      <button data-view="bulk">대량 생성</button>
       <button data-view="manage">관리 <span id="navCount"></span></button>
       <button data-view="guide">가이드</button>
     </nav>
@@ -240,16 +273,10 @@ table.list .camp{font-weight:600}
         <label><input type="checkbox" id="optHttps" checked> 프로토콜 없으면 https:// 추가</label>
       </div>
 
-      <details class="more" id="bulkBox" style="margin-top:16px">
-        <summary>일괄 생성 (여러 랜딩 URL × 여러 utm_content)</summary>
-        <div class="hint" style="margin-bottom:10px">위에 입력한 source / medium / campaign 등은 공통으로 적용되고, 아래 목록의 조합만큼 URL이 만들어집니다.</div>
-        <div class="row2">
-          <label class="f"><span>랜딩 URL 목록 (한 줄에 하나)</span><textarea id="bulkUrls" placeholder="https://site.com/a&#10;https://site.com/b"></textarea></label>
-          <label class="f"><span>utm_content 목록 (선택, 한 줄에 하나)</span><textarea id="bulkContents" placeholder="banner_a&#10;banner_b"></textarea></label>
-        </div>
-        <div class="btns"><button class="btn sm" id="bulkPreview">미리보기</button><button class="btn sm primary" id="bulkSave" disabled>전체 저장</button></div>
-        <div id="bulkOut"></div>
-      </details>
+      <div class="callout">
+        <div><b>여러 개를 한 번에 만들어야 하나요?</b><span>매체만 고르고 캠페인·콘텐츠는 목록/엑셀 붙여넣기로 대량 설정할 수 있어요.</span></div>
+        <button class="btn primary" id="toBulkFromBuilder">이 매체로 대량 생성 →</button>
+      </div>
     </div>
 
     <div class="sticky">
@@ -293,6 +320,159 @@ table.list .camp{font-weight:600}
   </div>
 </section>
 
+<!-- ================= BULK ================= -->
+<section class="view" id="v-bulk">
+  <div class="bgrid2">
+    <div class="card">
+      <h2><span class="step-n">1</span>매체 선택 <span class="opt">복수 선택 가능</span></h2>
+      <p class="sub">매체(source / medium)만 고르면, 캠페인 이름부터는 아래에서 대량으로 설정합니다. 매체를 여러 개 고르면 같은 캠페인·콘텐츠가 매체별로 각각 만들어집니다.</p>
+      <div class="chips" id="bMediaPresets"></div>
+      <details class="more">
+        <summary>직접 입력해서 매체 추가</summary>
+        <div class="row3">
+          <label class="f"><span>utm_source</span><input type="text" id="bSrc" list="dl_source" placeholder="naver"></label>
+          <label class="f"><span>utm_medium</span><input type="text" id="bMed" list="dl_medium" placeholder="display"></label>
+          <label class="f"><span>source_platform</span><input type="text" id="bPlat" placeholder="(선택)"></label>
+        </div>
+        <button class="btn sm" id="bAddMedia">매체 추가</button>
+      </details>
+      <div class="sec-title">선택된 매체</div>
+      <div class="media-list" id="bMediaList"></div>
+
+      <div class="sec-title" style="margin-top:22px"><span class="step-n">2</span>공통 설정</div>
+      <label class="f"><span>기본 랜딩 URL <span class="req">필수</span></span>
+        <input type="url" id="bc_base" placeholder="https://www.example.com/event — 행별 랜딩 URL이 비어 있으면 이 값을 사용">
+      </label>
+      <div class="row2">
+        <label class="f"><span>공통 utm_id <span class="opt">선택</span></span><input type="text" id="bc_utm_id" placeholder="행 값이 비면 적용"></label>
+        <label class="f"><span>공통 utm_term <span class="opt">선택</span></span><input type="text" id="bc_utm_term" placeholder="행 값이 비면 적용"></label>
+      </div>
+      <div class="row2">
+        <label class="f"><span>공통 creative_format</span><input type="text" id="bc_utm_creative_format" list="dl_format" placeholder="(선택)"></label>
+        <label class="f"><span>공통 marketing_tactic</span><input type="text" id="bc_utm_marketing_tactic" list="dl_tactic" placeholder="(선택)"></label>
+      </div>
+      <div class="toggles">
+        <label><input type="checkbox" id="bOptLower" checked> 소문자 자동 변환</label>
+        <label><input type="checkbox" id="bOptSpace" checked> 공백 → _</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="step-n">3</span>조합 생성기</h2>
+      <p class="sub">한 줄에 하나씩 입력하면 <b>매체 × 캠페인 × 콘텐츠 × 키워드 × 랜딩</b> 조합만큼 행이 만들어집니다. 엑셀 열을 그대로 복사해 붙여넣어도 됩니다.</p>
+      <div class="row2">
+        <label class="f"><span>캠페인 이름 목록 <span class="req">필수</span></span><textarea id="bgCamps" placeholder="2610_brand_fw_sale&#10;2610_brand_retarget"></textarea></label>
+        <label class="f"><span>utm_content 목록 <span class="opt">선택</span></span><textarea id="bgContents" placeholder="banner_a_1200x628&#10;banner_b_1080x1080&#10;video_15s"></textarea></label>
+      </div>
+      <div class="row2">
+        <label class="f"><span>utm_term 목록 <span class="opt">선택</span></span><textarea id="bgTerms" placeholder="겨울패딩&#10;롱패딩" style="min-height:70px"></textarea></label>
+        <label class="f"><span>랜딩 URL 목록 <span class="opt">선택 · 비우면 기본 랜딩</span></span><textarea id="bgUrls" placeholder="https://site.com/a&#10;https://site.com/b" style="min-height:70px"></textarea></label>
+      </div>
+      <details class="more" style="margin-bottom:12px">
+        <summary>콘텐츠 순번 자동 생성 (예: banner_01 ~ banner_20)</summary>
+        <div class="row3">
+          <label class="f"><span>접두어</span><input type="text" id="bnPrefix" placeholder="banner_"></label>
+          <label class="f"><span>시작 번호</span><input type="text" id="bnStart" value="1"></label>
+          <label class="f"><span>개수</span><input type="text" id="bnCount" value="10"></label>
+        </div>
+        <div class="row2">
+          <label class="f"><span>자릿수 (0 채움)</span><select id="bnPad"><option value="1">1 (1, 2…)</option><option value="2" selected>2 (01, 02…)</option><option value="3">3 (001…)</option></select></label>
+          <label class="f"><span>접미어</span><input type="text" id="bnSuffix" placeholder="_1200x628"></label>
+        </div>
+        <button class="btn sm" id="bnApply">콘텐츠 목록에 추가</button>
+      </details>
+      <div class="channel" id="bGenInfo" style="margin:0 0 12px"><div><small>생성 예정</small><br><b id="bGenCount">0행</b></div><small id="bGenFormula" style="text-align:right"></small></div>
+      <div class="btns">
+        <button class="btn primary" id="bGenAdd">그리드에 행 추가</button>
+        <button class="btn" id="bGenReplace">그리드 비우고 새로 생성</button>
+        <button class="btn" id="bGenClear">입력 목록 비우기</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px" id="bGridCard">
+    <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:12px">
+      <div>
+        <h2><span class="step-n">4</span>대량 편집 그리드</h2>
+        <p class="sub" style="margin:0">엑셀에서 여러 셀을 복사해 아무 칸에나 붙여넣으면 오른쪽·아래로 자동 채워집니다. Enter = 아래 칸 이동.</p>
+      </div>
+      <div class="summary" id="bSummary"></div>
+    </div>
+    <div class="toolbar">
+      <button class="btn sm" id="bAddRow">+ 행 추가</button>
+      <button class="btn sm danger" id="bDelSel" disabled>선택 행 삭제</button>
+      <button class="btn sm" id="bClear">전체 비우기</button>
+      <label class="btn sm" style="cursor:pointer"><input type="checkbox" id="bShowExt" style="margin:0"> 확장 파라미터 열 표시</label>
+      <span style="flex:1"></span>
+      <span class="hint" id="bSelInfo" style="margin:0">선택 0행 (선택이 없으면 아래 일괄 작업은 전체 행에 적용)</span>
+    </div>
+    <div class="tools-row">
+      <div class="tool">
+        <b>열 일괄 채우기</b>
+        <select id="bFillCol"></select>
+        <input type="text" id="bFillVal" placeholder="값 — {n} 넣으면 01, 02… 순번">
+        <select id="bFillTarget"><option value="all">선택/전체 행</option><option value="empty">빈 칸만</option></select>
+        <button class="btn sm" id="bFillApply">적용</button>
+      </div>
+      <div class="tool">
+        <b>찾아 바꾸기</b>
+        <select id="bRepCol"></select>
+        <input type="text" id="bFind" placeholder="찾을 값">
+        <input type="text" id="bRep" placeholder="바꿀 값">
+        <button class="btn sm" id="bRepApply">바꾸기</button>
+      </div>
+      <div class="tool">
+        <b>매체 변경</b>
+        <select id="bSetMedia"></select>
+        <button class="btn sm" id="bSetMediaApply">적용</button>
+      </div>
+    </div>
+    <div class="grid-wrap">
+      <table class="xgrid" id="bTable">
+        <thead><tr>
+          <th style="width:32px"><input type="checkbox" id="bSelAll"></th>
+          <th style="width:40px">#</th>
+          <th style="min-width:170px">매체</th>
+          <th style="min-width:200px">랜딩 URL</th>
+          <th style="min-width:170px">utm_campaign <span class="req">*</span></th>
+          <th style="min-width:160px">utm_content</th>
+          <th style="min-width:120px">utm_term</th>
+          <th style="min-width:100px">utm_id</th>
+          <th class="ext" style="min-width:120px">creative_format</th>
+          <th class="ext" style="min-width:120px">marketing_tactic</th>
+          <th style="min-width:300px">최종 URL</th>
+          <th>예상 채널</th>
+          <th>상태</th>
+          <th></th>
+        </tr></thead>
+        <tbody id="bTbody"></tbody>
+      </table>
+      <div class="empty-state" id="bEmpty">아직 행이 없습니다. ① 매체를 고르고 ③ 조합 생성기로 행을 만들거나, <b>+ 행 추가</b> 후 엑셀 내용을 붙여넣으세요.</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px">
+    <h2><span class="step-n">5</span>저장 · 내보내기</h2>
+    <p class="sub">관리 정보는 저장되는 모든 행에 공통 적용됩니다. 기존 항목을 불러와 수정한 행은 덮어쓰기(업데이트)되며, 빈 칸으로 둔 관리 정보는 기존 값을 유지합니다.</p>
+    <div class="row3">
+      <label class="f"><span>담당자</span><input type="text" id="bm_owner" list="dl_owner" placeholder="홍길동"></label>
+      <label class="f"><span>광고주/브랜드</span><input type="text" id="bm_client" list="dl_client" placeholder="광고주명"></label>
+      <label class="f"><span>집행 기간</span><input type="text" id="bm_period" placeholder="2026-10-22 ~ 2026-11-30"></label>
+    </div>
+    <div class="row2">
+      <label class="f"><span>상태</span><select id="bm_status"><option value="">신규=진행중 / 기존=유지</option><option value="active">진행중</option><option value="paused">일시중지</option><option value="ended">종료</option></select></label>
+      <label class="f"><span>메모</span><input type="text" id="bm_memo" placeholder="(선택)"></label>
+    </div>
+    <div class="btns">
+      <button class="btn primary" id="bSaveAll" disabled>정상 행 전체 저장</button>
+      <button class="btn" id="bCopyAll" disabled>정상 URL 전체 복사</button>
+      <button class="btn" id="bCopyTsv" disabled>표 형태로 복사 (엑셀 붙여넣기용)</button>
+      <button class="btn" id="bCsv" disabled>CSV 다운로드</button>
+    </div>
+    <p class="hint">오류 행과 그리드 내 중복 URL(두 번째 이후)은 저장·복사에서 제외됩니다. 작업 중인 그리드는 이 브라우저에 자동 임시 저장됩니다.</p>
+  </div>
+</section>
+
 <!-- ================= MANAGE ================= -->
 <section class="view" id="v-manage">
   <div class="stats">
@@ -313,6 +493,8 @@ table.list .camp{font-weight:600}
     <button class="btn sm" id="exportJson">JSON 백업</button>
     <button class="btn sm" id="importJsonBtn">JSON 복원</button>
     <span style="flex:1"></span>
+    <select id="bulkStatus" class="btn sm" style="width:auto" disabled><option value="">선택 상태 변경</option><option value="active">→ 진행중</option><option value="paused">→ 일시중지</option><option value="ended">→ 종료</option></select>
+    <button class="btn sm" id="toBulk" disabled>선택 → 대량 편집</button>
     <button class="btn sm" id="copySel" disabled>선택 URL 복사</button>
     <button class="btn sm danger" id="delSel" disabled>선택 삭제</button>
     <input type="file" id="fileCsv" accept=".csv,text/csv" hidden>
@@ -500,6 +682,7 @@ function showView(v){
   $$('nav button').forEach(x => x.classList.toggle('on', x.dataset.view===v));
   $$('.view').forEach(x => x.classList.toggle('on', x.id==='v-'+v));
   if(v==='manage') renderList();
+  if(v==='bulk') renderBulk();
   window.scrollTo({top:0});
 }
 (function(){ const t=loadPref().theme; if(t) document.documentElement.setAttribute('data-theme',t); })();
@@ -657,34 +840,6 @@ $('#saveBtn').addEventListener('click', () => {
   persist(); refreshLists(); toast('목록에 저장했습니다');
 });
 
-// bulk
-let bulkItems = [];
-$('#bulkPreview').addEventListener('click', () => {
-  const urls = $('#bulkUrls').value.split('\n').map(s=>s.trim()).filter(Boolean);
-  const contents = $('#bulkContents').value.split('\n').map(s=>norm(s)).filter(Boolean);
-  const p = readParams(); const miss = REQ.filter(k=>!p[k]);
-  bulkItems = [];
-  if(!urls.length){ $('#bulkOut').innerHTML='<div class="msg err" style="margin-top:10px">랜딩 URL을 한 줄 이상 입력하세요.</div>'; $('#bulkSave').disabled=true; return; }
-  if(miss.length){ $('#bulkOut').innerHTML='<div class="msg err" style="margin-top:10px">공통 필수 파라미터 누락: '+miss.join(', ')+'</div>'; $('#bulkSave').disabled=true; return; }
-  const errs=[];
-  urls.forEach(u => (contents.length?contents:[p.utm_content||'']).forEach(c => {
-    const pp = Object.assign({}, p); if(c) pp.utm_content=c; else delete pp.utm_content;
-    const b = buildUrl(u, pp);
-    if(b.err) errs.push(u); else bulkItems.push({base:u, params:pp, final:b.final, channel:predictChannel(pp).ch});
-  }));
-  $('#bulkOut').innerHTML = (errs.length?`<div class="msg err" style="margin-top:10px">형식 오류로 제외된 URL ${errs.length}개: ${esc(errs.join(', '))}</div>`:'')
-    + `<div class="msg info" style="margin-top:10px">${bulkItems.length}개 URL이 생성됩니다.</div>`
-    + `<div class="bulk-list">${bulkItems.map(x=>`<div>${esc(x.final)}</div>`).join('')}</div>`
-    + (bulkItems.length?`<div class="btns" style="margin-top:8px"><button class="btn sm" id="bulkCopy">전체 복사</button></div>`:'');
-  $('#bulkSave').disabled = !bulkItems.length;
-  const bc=$('#bulkCopy'); if(bc) bc.addEventListener('click', () => copy(bulkItems.map(x=>x.final).join('\n')));
-});
-$('#bulkSave').addEventListener('click', () => {
-  if(!bulkItems.length) return; const meta=metaFromForm();
-  bulkItems.slice().reverse().forEach(x => data.unshift(makeRecord(x.base,x.params,x.final,x.channel,meta)));
-  persist(); refreshLists(); toast(bulkItems.length+'개를 저장했습니다'); bulkItems=[]; $('#bulkSave').disabled=true; $('#bulkOut').innerHTML='';
-});
-
 /* ---------- manage ---------- */
 let sortKey='createdAt', sortDir=-1; const selected=new Set();
 const STATUS_LABEL={active:'진행중',paused:'일시중지',ended:'종료'};
@@ -754,7 +909,7 @@ function renderList(){
   $('#selAll').checked = rows.length>0 && rows.every(r=>selected.has(r.id));
   updateSelBtns();
 }
-function updateSelBtns(){ $('#copySel').disabled=!selected.size; $('#delSel').disabled=!selected.size; $('#delSel').textContent=selected.size?`선택 삭제 (${selected.size})`:'선택 삭제'; }
+function updateSelBtns(){ $('#toBulk').disabled=!selected.size; $('#bulkStatus').disabled=!selected.size; $('#copySel').disabled=!selected.size; $('#delSel').disabled=!selected.size; $('#delSel').textContent=selected.size?`선택 삭제 (${selected.size})`:'선택 삭제'; }
 
 function loadIntoBuilder(r, asCopy){
   $('#baseUrl').value=r.baseUrl;
@@ -853,6 +1008,287 @@ $('#fileJson').addEventListener('change', e => {
     }catch(err){ toast('올바른 백업 파일이 아닙니다'); }
   };
   rd.readAsText(f,'utf-8'); e.target.value='';
+});
+
+/* ---------- bulk ---------- */
+const DRAFT='wylie_utm_bulk_draft_v1';
+const TCOLS=['base','utm_campaign','utm_content','utm_term','utm_id','utm_creative_format','utm_marketing_tactic'];
+const EXTC=['utm_creative_format','utm_marketing_tactic'];
+const CL={base:'랜딩 URL',utm_campaign:'utm_campaign',utm_content:'utm_content',utm_term:'utm_term',utm_id:'utm_id',utm_creative_format:'creative_format',utm_marketing_tactic:'marketing_tactic'};
+const COMMON=['base','utm_id','utm_term','utm_creative_format','utm_marketing_tactic'];
+const GEN={camps:'bgCamps',contents:'bgContents',terms:'bgTerms',urls:'bgUrls'};
+let bulk={media:[],rows:[],showExt:false,common:{},gen:{}};
+const bSel=new Set(); const rowEls=new Map(); let computed=new Map();
+(function(){ try{ const d=JSON.parse(localStorage.getItem(DRAFT)||'null'); if(d&&Array.isArray(d.rows)) bulk=Object.assign(bulk,d); }catch(e){} })();
+let draftT; function saveDraft(){ clearTimeout(draftT); draftT=setTimeout(()=>{ try{ localStorage.setItem(DRAFT, JSON.stringify(bulk)); }catch(e){} },300); }
+const visCols=()=>TCOLS.filter(k=>bulk.showExt||!EXTC.includes(k));
+const mLabel=m=>`${m.s} / ${m.m}${m.p?' · '+m.p:''}`;
+const getMedia=k=>bulk.media.find(x=>x.k===k);
+function findOrAddMedia(s,m,p){
+  s=(s||'').trim(); m=(m||'').trim(); p=(p||'').trim();
+  let x=bulk.media.find(a=>a.s===s&&a.m===m&&(a.p||'')===p);
+  if(!x){ x={k:uid(),s,m,p}; bulk.media.push(x); }
+  return x;
+}
+const lines=t=>(t||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+
+/* media */
+function renderMedia(){
+  $('#bMediaPresets').innerHTML = PRESETS.map((x,i)=>{ const on=bulk.media.some(m=>m.s===x.s&&m.m===x.m&&(m.p||'')===(x.p||'')); return `<button class="chip${on?' on':''}" data-i="${i}">${on?'✓ ':''}${esc(x.n)}</button>`; }).join('');
+  $('#bMediaList').innerHTML = bulk.media.length ? bulk.media.map(m=>{ const n=bulk.rows.filter(r=>r.mk===m.k).length; const ch=predictChannel({utm_source:m.s,utm_medium:m.m}).ch; return `<span class="pill" data-k="${m.k}">${esc(mLabel(m))}<em>${esc(ch)} · ${n}행</em><button data-act="rm" title="제거">×</button></span>`; }).join('') : '<span class="hint">위에서 매체를 1개 이상 선택하세요.</span>';
+  const opts=bulk.media.map(m=>`<option value="${m.k}">${esc(mLabel(m))}</option>`).join('');
+  $('#bSetMedia').innerHTML = opts || '<option value="">(매체 없음)</option>';
+  updateGenInfo();
+}
+function removeMedia(k){
+  const n=bulk.rows.filter(r=>r.mk===k).length;
+  if(n && !confirm(`이 매체로 만들어진 ${n}개 행도 함께 삭제됩니다. 계속할까요?`)) return;
+  bulk.rows=bulk.rows.filter(r=>r.mk!==k); bulk.media=bulk.media.filter(m=>m.k!==k);
+  saveDraft(); renderMedia(); renderGrid();
+}
+$('#bMediaPresets').addEventListener('click', e=>{
+  const b=e.target.closest('.chip'); if(!b) return; const x=PRESETS[+b.dataset.i];
+  const ex=bulk.media.find(m=>m.s===x.s&&m.m===x.m&&(m.p||'')===(x.p||''));
+  if(ex){ removeMedia(ex.k); return; }
+  findOrAddMedia(x.s,x.m,x.p); saveDraft(); renderMedia(); renderGrid();
+});
+$('#bMediaList').addEventListener('click', e=>{ if(e.target.dataset.act==='rm') removeMedia(e.target.closest('.pill').dataset.k); });
+$('#bAddMedia').addEventListener('click', ()=>{
+  const s=norm($('#bSrc').value), m=norm($('#bMed').value), p=norm($('#bPlat').value);
+  if(!s||!m){ toast('utm_source와 utm_medium을 입력하세요'); return; }
+  findOrAddMedia(s,m,p); ['bSrc','bMed','bPlat'].forEach(id=>$('#'+id).value=''); saveDraft(); renderMedia(); renderGrid();
+});
+
+/* common + options */
+let commonT;
+COMMON.forEach(k=>$('#bc_'+k).addEventListener('input', e=>{ bulk.common[k]=e.target.value; saveDraft(); clearTimeout(commonT); commonT=setTimeout(renderGrid,250); }));
+[['bOptLower','optLower'],['bOptSpace','optSpace']].forEach(([b,m])=>$('#'+b).addEventListener('change', e=>{ $('#'+m).checked=e.target.checked; $('#'+m).dispatchEvent(new Event('change')); refreshComputed(); }));
+
+/* generator */
+Object.entries(GEN).forEach(([k,id])=>$('#'+id).addEventListener('input', e=>{ bulk.gen[k]=e.target.value; saveDraft(); updateGenInfo(); }));
+function genLists(){ return {camps:lines(bulk.gen.camps), contents:lines(bulk.gen.contents), terms:lines(bulk.gen.terms), urls:lines(bulk.gen.urls)}; }
+function updateGenInfo(){
+  const g=genLists(); const parts=[`매체 ${bulk.media.length}`,`캠페인 ${g.camps.length}`];
+  if(g.contents.length) parts.push(`콘텐츠 ${g.contents.length}`); if(g.terms.length) parts.push(`키워드 ${g.terms.length}`); if(g.urls.length) parts.push(`랜딩 ${g.urls.length}`);
+  const total=bulk.media.length*g.camps.length*Math.max(1,g.contents.length)*Math.max(1,g.terms.length)*Math.max(1,g.urls.length);
+  $('#bGenCount').textContent = total.toLocaleString()+'행';
+  $('#bGenFormula').textContent = !bulk.media.length ? '① 매체를 먼저 선택하세요' : !g.camps.length ? '캠페인 이름을 1개 이상 입력하세요' : parts.join(' × ');
+  $('#bGenAdd').disabled = $('#bGenReplace').disabled = !total;
+}
+function generate(replace){
+  const g=genLists(); if(!bulk.media.length||!g.camps.length) return;
+  const total=bulk.media.length*g.camps.length*Math.max(1,g.contents.length)*Math.max(1,g.terms.length)*Math.max(1,g.urls.length);
+  if(total>3000 && !confirm(`${total.toLocaleString()}개 행을 만듭니다. 브라우저가 느려질 수 있어요. 계속할까요?`)) return;
+  if(replace && bulk.rows.length && !confirm(`현재 그리드의 ${bulk.rows.length}개 행을 지우고 새로 생성할까요?`)) return;
+  if(replace){ bulk.rows=[]; bSel.clear(); }
+  const C=g.contents.length?g.contents:[''], T=g.terms.length?g.terms:[''], U=g.urls.length?g.urls:[''];
+  bulk.media.forEach(m=>U.forEach(u=>g.camps.forEach(c=>C.forEach(ct=>T.forEach(t=>bulk.rows.push({rid:uid(),mk:m.k,base:u,utm_campaign:c,utm_content:ct,utm_term:t}))))));
+  saveDraft(); renderMedia(); renderGrid(); toast(total.toLocaleString()+'개 행을 추가했습니다');
+  $('#bGridCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+$('#bGenAdd').addEventListener('click', ()=>generate(false));
+$('#bGenReplace').addEventListener('click', ()=>generate(true));
+$('#bGenClear').addEventListener('click', ()=>{ Object.entries(GEN).forEach(([k,id])=>{ $('#'+id).value=''; bulk.gen[k]=''; }); saveDraft(); updateGenInfo(); });
+$('#bnApply').addEventListener('click', ()=>{
+  const pre=$('#bnPrefix').value.trim(), suf=$('#bnSuffix').value.trim(), st=parseInt($('#bnStart').value,10), n=parseInt($('#bnCount').value,10), pad=+$('#bnPad').value;
+  if(isNaN(st)||isNaN(n)||n<1||n>1000){ toast('시작 번호와 개수(1~1000)를 확인하세요'); return; }
+  const add=Array.from({length:n},(_,i)=>pre+String(st+i).padStart(pad,'0')+suf);
+  const ta=$('#bgContents'); ta.value=(ta.value.trim()?ta.value.trim()+'\n':'')+add.join('\n');
+  bulk.gen.contents=ta.value; saveDraft(); updateGenInfo(); toast(n+'개 콘텐츠 값을 추가했습니다');
+});
+
+/* compute */
+function computeRow(r){
+  const m=getMedia(r.mk), c=bulk.common;
+  if(!m) return {err:'매체 미지정', bad:['mk']};
+  const p={utm_source:norm(m.s), utm_medium:norm(m.m)}; if(m.p) p.utm_source_platform=norm(m.p);
+  ['utm_campaign','utm_id','utm_term','utm_content','utm_creative_format','utm_marketing_tactic'].forEach(k=>{ const v=norm(r[k]||'')||norm(c[k]||''); if(v) p[k]=v; });
+  const base=(r.base||'').trim()||(c.base||'').trim();
+  if(!base) return {params:p, err:'랜딩 URL 없음', bad:['base']};
+  if(!p.utm_campaign) return {params:p, err:'캠페인 이름 없음', bad:['utm_campaign']};
+  const b=buildUrl(base,p); if(b.err) return {params:p, err:'URL 형식 오류', bad:['base']};
+  return {params:p, base, final:b.final, channel:predictChannel(p).ch};
+}
+function refreshComputed(){
+  computed=new Map(); const cnt={};
+  bulk.rows.forEach(r=>{ const c=computeRow(r); computed.set(r.rid,c); if(c.final) cnt[c.final]=(cnt[c.final]||0)+1; });
+  const existing=new Set(data.map(d=>d.finalUrl)); const seen=new Set();
+  let ok=0,err=0,dup=0,ex=0,un=0,saved=0;
+  bulk.rows.forEach(r=>{
+    const c=computed.get(r.rid);
+    c.dup = !!c.final && seen.has(c.final); if(c.final) seen.add(c.final);
+    c.exists = !!c.final && !r.id && existing.has(c.final);
+    if(c.err) err++; else if(c.dup) dup++; else { ok++; if(c.exists) ex++; }
+    if(c.channel==='Unassigned') un++; if(r.id && !r.dirty) saved++;
+    const tr=rowEls.get(r.rid); if(!tr) return;
+    tr.querySelector('.fin').textContent=c.final||'';
+    tr.querySelector('.ch').innerHTML=c.channel?`<span class="badge ${c.channel==='Unassigned'?'b-un':'b-ch'}">${esc(c.channel)}</span>`:'';
+    let st;
+    if(c.err) st=`<span class="badge b-un">${esc(c.err)}</span>`;
+    else if(c.dup) st='<span class="badge b-paused">그리드 중복</span>';
+    else if(r.id) st=r.dirty?'<span class="badge b-paused">수정됨</span>':'<span class="badge b-active">저장됨</span>';
+    else if(c.exists) st='<span class="badge b-ended">기존 목록에 있음</span>';
+    else st='<span class="badge b-ch">신규</span>';
+    tr.querySelector('.st').innerHTML=st;
+    tr.querySelectorAll('.cell').forEach(el=>el.classList.toggle('bad', !!(c.bad&&c.bad.includes(el.dataset.k))));
+  });
+  $('#bSummary').innerHTML = bulk.rows.length ? [
+    `<span>전체 <b>${bulk.rows.length.toLocaleString()}</b></span>`,
+    `<span class="s-ok">정상 <b>${ok.toLocaleString()}</b></span>`,
+    err?`<span class="s-err">오류 <b>${err}</b></span>`:'',
+    dup?`<span class="s-warn">중복 <b>${dup}</b></span>`:'',
+    ex?`<span>기존 목록과 동일 <b>${ex}</b></span>`:'',
+    un?`<span class="s-err">Unassigned 예상 <b>${un}</b></span>`:'',
+    saved?`<span>저장됨 <b>${saved}</b></span>`:''
+  ].join('') : '';
+  ['bSaveAll','bCopyAll','bCopyTsv','bCsv'].forEach(id=>$('#'+id).disabled=!ok);
+  $('#bSaveAll').textContent = ok?`정상 행 ${ok.toLocaleString()}개 저장`:'정상 행 전체 저장';
+}
+
+/* grid */
+function renderGrid(){
+  $('#bTable').classList.toggle('show-ext', !!bulk.showExt); $('#bShowExt').checked=!!bulk.showExt;
+  const opts=bulk.media.map(m=>`<option value="${m.k}">${esc(mLabel(m))}</option>`).join('');
+  const ph=k=> k==='base' ? (bulk.common.base?'기본: '+bulk.common.base:'랜딩 URL') : (bulk.common[k]?'공통: '+bulk.common[k]:'');
+  const PH={}; TCOLS.forEach(k=>PH[k]=esc(ph(k)));
+  $('#bTbody').innerHTML = bulk.rows.map((r,i)=>
+    `<tr data-rid="${r.rid}"><td><input type="checkbox" class="rsel"${bSel.has(r.rid)?' checked':''}></td><td class="idx">${i+1}</td>`+
+    `<td><select class="cell" data-k="mk">${getMedia(r.mk)?'':'<option value="" selected>매체 선택</option>'}${opts.replace(`value="${r.mk}"`,`value="${r.mk}" selected`)}</select></td>`+
+    TCOLS.map(k=>`<td${EXTC.includes(k)?' class="ext"':''}><input class="cell" data-k="${k}" value="${esc(r[k]||'')}" placeholder="${PH[k]}"></td>`).join('')+
+    `<td class="fin"></td><td class="ch"></td><td class="st"></td><td><div class="acts"><button class="btn sm" data-act="copy">복사</button><button class="btn sm danger" data-act="del" title="행 삭제">×</button></div></td></tr>`
+  ).join('');
+  rowEls.clear(); $('#bTbody').querySelectorAll('tr').forEach(tr=>rowEls.set(tr.dataset.rid,tr));
+  $('#bEmpty').style.display = bulk.rows.length?'none':'block';
+  const colOpts=visCols().map(k=>`<option value="${k}">${CL[k]}</option>`).join('');
+  ['bFillCol','bRepCol'].forEach(id=>{ const el=$('#'+id), cur=el.value; el.innerHTML=(id==='bRepCol'?'<option value="*">모든 열</option>':'')+colOpts; if([...el.options].some(o=>o.value===cur)) el.value=cur; else if(id==='bFillCol') el.value='utm_content'; });
+  updateBSel(); refreshComputed();
+}
+function updateBSel(){
+  [...bSel].forEach(id=>{ if(!bulk.rows.some(r=>r.rid===id)) bSel.delete(id); });
+  $('#bDelSel').disabled=!bSel.size; $('#bDelSel').textContent=bSel.size?`선택 행 삭제 (${bSel.size})`:'선택 행 삭제';
+  $('#bSelInfo').textContent = bSel.size?`선택 ${bSel.size}행 — 아래 일괄 작업은 선택 행에만 적용`:'선택 0행 (선택이 없으면 아래 일괄 작업은 전체 행에 적용)';
+  $('#bSelAll').checked = bulk.rows.length>0 && bulk.rows.every(r=>bSel.has(r.rid));
+}
+const targetRows=()=>bSel.size?bulk.rows.filter(r=>bSel.has(r.rid)):bulk.rows;
+const rowOf=el=>{ const tr=el.closest('tr'); return tr && bulk.rows.find(r=>r.rid===tr.dataset.rid); };
+let compT;
+function touched(r){ if(r.id) r.dirty=true; saveDraft(); clearTimeout(compT); compT=setTimeout(refreshComputed, bulk.rows.length>500?200:30); }
+const tb=$('#bTbody');
+tb.addEventListener('input', e=>{ const el=e.target; if(!el.classList.contains('cell')) return; const r=rowOf(el); if(!r) return; r[el.dataset.k]=el.value; touched(r); });
+tb.addEventListener('change', e=>{
+  const el=e.target; const r=rowOf(el); if(!r) return;
+  if(el.classList.contains('rsel')){ el.checked?bSel.add(r.rid):bSel.delete(r.rid); updateBSel(); return; }
+  if(el.dataset.k==='mk'){ r.mk=el.value; touched(r); renderMedia(); }
+});
+tb.addEventListener('click', e=>{
+  const act=e.target.dataset.act; if(!act) return; const r=rowOf(e.target); if(!r) return;
+  if(act==='copy'){ const c=computed.get(r.rid); if(c&&c.final) copy(c.final); else toast('이 행은 아직 완성되지 않았습니다'); }
+  if(act==='del'){ bulk.rows=bulk.rows.filter(x=>x!==r); bSel.delete(r.rid); saveDraft(); renderMedia(); renderGrid(); }
+});
+tb.addEventListener('keydown', e=>{
+  if(e.key!=='Enter' || !e.target.classList.contains('cell')) return;
+  e.preventDefault(); const tr=e.target.closest('tr'); const nx=e.shiftKey?tr.previousElementSibling:tr.nextElementSibling;
+  if(nx){ const t=nx.querySelector(`.cell[data-k="${e.target.dataset.k}"]`); if(t){ t.focus(); if(t.select) t.select(); } }
+});
+tb.addEventListener('paste', e=>{
+  const el=e.target; if(!el.classList.contains('cell') || el.dataset.k==='mk') return;
+  const text=(e.clipboardData||window.clipboardData).getData('text'); if(!/[\t\n]/.test(text.replace(/\r?\n$/,''))) return;
+  e.preventDefault();
+  const mtx=text.replace(/\r?\n$/,'').split(/\r?\n/).map(l=>l.split('\t'));
+  const cols=visCols(); const c0=cols.indexOf(el.dataset.k); let ri=bulk.rows.indexOf(rowOf(el));
+  const mk=bulk.rows[ri].mk; let added=0;
+  mtx.forEach((cells,i)=>{
+    if(!bulk.rows[ri+i]){ bulk.rows.push({rid:uid(),mk}); added++; }
+    const r=bulk.rows[ri+i];
+    cells.forEach((v,j)=>{ const k=cols[c0+j]; if(k) r[k]=v.trim(); });
+    if(r.id) r.dirty=true;
+  });
+  saveDraft(); renderMedia(); renderGrid();
+  toast(`${mtx.length}행 × ${mtx[0].length}열 붙여넣기${added?` (새 행 ${added}개 추가)`:''}`);
+});
+$('#bSelAll').addEventListener('change', e=>{ bulk.rows.forEach(r=>e.target.checked?bSel.add(r.rid):bSel.delete(r.rid)); tb.querySelectorAll('.rsel').forEach(c=>c.checked=e.target.checked); updateBSel(); });
+$('#bAddRow').addEventListener('click', ()=>{
+  const last=bulk.rows[bulk.rows.length-1]; const mk=last?last.mk:(bulk.media[0]||{}).k||'';
+  bulk.rows.push({rid:uid(),mk, utm_campaign:last?last.utm_campaign:''}); saveDraft(); renderMedia(); renderGrid();
+  const tr=tb.lastElementChild; if(tr){ const t=tr.querySelector('.cell[data-k="utm_content"]'); t&&t.focus(); }
+});
+$('#bDelSel').addEventListener('click', ()=>{ if(!confirm(`선택한 ${bSel.size}개 행을 그리드에서 삭제할까요? (관리 목록에는 영향 없음)`)) return; bulk.rows=bulk.rows.filter(r=>!bSel.has(r.rid)); bSel.clear(); saveDraft(); renderMedia(); renderGrid(); });
+$('#bClear').addEventListener('click', ()=>{ if(!bulk.rows.length) return; if(!confirm('그리드의 모든 행을 비울까요? (관리 목록에는 영향 없음)')) return; bulk.rows=[]; bSel.clear(); saveDraft(); renderMedia(); renderGrid(); });
+$('#bShowExt').addEventListener('change', e=>{ bulk.showExt=e.target.checked; saveDraft(); renderGrid(); });
+$('#bFillApply').addEventListener('click', ()=>{
+  const k=$('#bFillCol').value, v=$('#bFillVal').value, onlyEmpty=$('#bFillTarget').value==='empty';
+  const rows=targetRows(); let n=0, seq=0;
+  const pad=String(rows.length).length<2?2:String(rows.length).length;
+  rows.forEach(r=>{ if(onlyEmpty && (r[k]||'').trim()) return; seq++; r[k]=v.replace(/\{n\}/g,String(seq).padStart(pad,'0')); if(r.id) r.dirty=true; n++; });
+  saveDraft(); renderGrid(); toast(`${n}개 칸을 채웠습니다`);
+});
+$('#bRepApply').addEventListener('click', ()=>{
+  const col=$('#bRepCol').value, f=$('#bFind').value, t=$('#bRep').value; if(!f){ toast('찾을 값을 입력하세요'); return; }
+  const cols=col==='*'?visCols():[col]; let n=0;
+  targetRows().forEach(r=>cols.forEach(k=>{ const v=r[k]||''; if(v.includes(f)){ r[k]=v.split(f).join(t); n++; if(r.id) r.dirty=true; } }));
+  saveDraft(); renderGrid(); toast(n?`${n}개 칸을 바꿨습니다`:'일치하는 값이 없습니다');
+});
+$('#bSetMediaApply').addEventListener('click', ()=>{
+  const k=$('#bSetMedia').value; if(!k) return; const rows=targetRows();
+  rows.forEach(r=>{ r.mk=k; if(r.id) r.dirty=true; }); saveDraft(); renderMedia(); renderGrid(); toast(`${rows.length}개 행의 매체를 변경했습니다`);
+});
+
+/* save / export */
+function validRows(){ return bulk.rows.map(r=>({r,c:computed.get(r.rid)})).filter(x=>x.c&&x.c.final&&!x.c.dup); }
+$('#bSaveAll').addEventListener('click', ()=>{
+  refreshComputed(); const list=validRows(); if(!list.length) return;
+  const exist=list.filter(x=>x.c.exists);
+  if(exist.length && !confirm(`기존 관리 목록과 URL이 같은 ${exist.length}개 행은 건너뛰고 저장합니다. 계속할까요?`)) return;
+  const meta={}; [['owner','bm_owner'],['client','bm_client'],['period','bm_period'],['memo','bm_memo'],['status','bm_status']].forEach(([k,id])=>{ const v=$('#'+id).value.trim(); if(v) meta[k]=v; });
+  const news=[]; let upd=0;
+  list.forEach(({r,c})=>{
+    if(c.exists) return;
+    const rec = r.id && data.find(d=>d.id===r.id);
+    if(rec){ Object.assign(rec,{baseUrl:c.base, params:c.params, finalUrl:c.final, channel:c.channel, updatedAt:Date.now()}, meta); upd++; }
+    else { const nr=makeRecord(c.base,c.params,c.final,c.channel,Object.assign({owner:'',client:'',period:'',memo:'',status:'active'},meta)); news.push(nr); r.id=nr.id; }
+    r.dirty=false;
+  });
+  data.unshift(...news); persist(); refreshLists(); saveDraft(); refreshComputed();
+  const skip=bulk.rows.length-news.length-upd;
+  toast(`신규 ${news.length} · 수정 ${upd}${skip?` · 제외 ${skip}`:''} 저장 완료`);
+});
+$('#bCopyAll').addEventListener('click', ()=>{ refreshComputed(); copy(validRows().map(x=>x.c.final).join('\n')); });
+const OUTCOLS=['utm_source','utm_medium','utm_source_platform','utm_campaign','utm_content','utm_term','utm_id','utm_creative_format','utm_marketing_tactic'];
+function exportMatrix(){ return [['랜딩URL',...OUTCOLS,'예상채널','최종URL']].concat(validRows().map(({c})=>[c.base,...OUTCOLS.map(k=>c.params[k]||''),c.channel,c.final])); }
+$('#bCopyTsv').addEventListener('click', ()=>{ refreshComputed(); copy(exportMatrix().map(r=>r.map(v=>String(v).replace(/[\t\n]/g,' ')).join('\t')).join('\n')); });
+$('#bCsv').addEventListener('click', ()=>{ refreshComputed(); const m=exportMatrix(); download(`utm_bulk_${stamp()}.csv`, '﻿'+m.map(r=>r.map(csvCell).join(',')).join('\r\n'), 'text/csv;charset=utf-8'); toast(`${m.length-1}개 행을 내보냈습니다`); });
+
+function renderBulk(){
+  $('#bOptLower').checked=$('#optLower').checked; $('#bOptSpace').checked=$('#optSpace').checked;
+  COMMON.forEach(k=>$('#bc_'+k).value=bulk.common[k]||'');
+  Object.entries(GEN).forEach(([k,id])=>$('#'+id).value=bulk.gen[k]||'');
+  renderMedia(); renderGrid();
+}
+function loadRecordsToBulk(recs){
+  if(!recs.length) return;
+  if(bulk.rows.length){ if(confirm(`대량 편집 그리드에 이미 ${bulk.rows.length}개 행이 있습니다.\n[확인] 비우고 불러오기  /  [취소] 뒤에 이어서 추가`)){ bulk.rows=[]; bSel.clear(); } }
+  recs.forEach(rec=>{
+    const p=rec.params||{}; const m=findOrAddMedia(p.utm_source,p.utm_medium,p.utm_source_platform);
+    const row={rid:uid(), id:rec.id, mk:m.k, base:rec.baseUrl};
+    ['utm_campaign','utm_content','utm_term','utm_id','utm_creative_format','utm_marketing_tactic'].forEach(k=>row[k]=p[k]||'');
+    if(p.utm_creative_format||p.utm_marketing_tactic) bulk.showExt=true;
+    bulk.rows.push(row);
+  });
+  saveDraft(); showView('bulk'); toast(`${recs.length}개 항목을 대량 편집기로 불러왔습니다`);
+}
+$('#toBulkFromBuilder').addEventListener('click', ()=>{
+  const s=norm($('#utm_source').value), m=norm($('#utm_medium').value), p=norm($('#utm_source_platform').value);
+  if(s&&m) findOrAddMedia(s,m,p);
+  const base=$('#baseUrl').value.trim(); if(base && !bulk.common.base) bulk.common.base=base;
+  const camp=norm($('#utm_campaign').value); if(camp && !lines(bulk.gen.camps).includes(camp)) bulk.gen.camps=((bulk.gen.camps||'').trim()?bulk.gen.camps.trim()+'\n':'')+camp;
+  saveDraft(); showView('bulk');
+  if(s&&m) toast('현재 매체·랜딩·캠페인을 대량 생성으로 옮겼습니다');
+});
+$('#toBulk').addEventListener('click', ()=>loadRecordsToBulk(data.filter(r=>selected.has(r.id))));
+$('#bulkStatus').addEventListener('change', e=>{
+  const v=e.target.value; if(!v||!selected.size) return;
+  data.forEach(r=>{ if(selected.has(r.id)){ r.status=v; r.updatedAt=Date.now(); } });
+  persist(); toast(`${selected.size}개 항목을 '${STATUS_LABEL[v]}'(으)로 변경했습니다`); e.target.value=''; renderList();
 });
 
 /* ---------- init ---------- */
