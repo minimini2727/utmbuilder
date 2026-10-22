@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UTM 빌더</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{
+  --bg:#f5f6f8; --surface:#ffffff; --surface-2:#f0f2f5; --border:#e2e5ea; --text:#17191c; --muted:#6b7280;
+  --accent:#2f6bff; --accent-weak:#e8efff; --accent-text:#ffffff;
+  --ok:#0f9d58; --ok-weak:#e6f6ee; --warn:#b26a00; --warn-weak:#fff4e0; --danger:#d93025; --danger-weak:#fdecea;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --radius:12px; --shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1115; --surface:#171a20; --surface-2:#1e222a; --border:#2a2f39; --text:#e8eaed; --muted:#9aa1ad;
+    --accent:#5b8cff; --accent-weak:#1c2a4d; --ok:#34c27a; --ok-weak:#12301f; --warn:#f0a43a; --warn-weak:#33260f; --danger:#ff6b5e; --danger-weak:#3a1714;
+    --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1115; --surface:#171a20; --surface-2:#1e222a; --border:#2a2f39; --text:#e8eaed; --muted:#9aa1ad;
+  --accent:#5b8cff; --accent-weak:#1c2a4d; --ok:#34c27a; --ok-weak:#12301f; --warn:#f0a43a; --warn-weak:#33260f; --danger:#ff6b5e; --danger-weak:#3a1714;
+  --shadow:none;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:14px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:1240px;margin:0 auto;padding:0 16px}
+header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+.bar{display:flex;align-items:center;gap:16px;height:60px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;white-space:nowrap}
+.logo i{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:var(--accent);color:#fff;font-style:normal;font-size:10px;font-weight:800;letter-spacing:-.02em}
+.logo small{font-weight:500;color:var(--muted);font-size:12px}
+nav{display:flex;gap:4px;margin-left:auto}
+nav button{border:0;background:transparent;padding:8px 14px;border-radius:8px;cursor:pointer;color:var(--muted);font-weight:600}
+nav button.on{background:var(--surface);color:var(--text);box-shadow:var(--shadow);outline:1px solid var(--border)}
+.theme-btn{border:1px solid var(--border);background:var(--surface);border-radius:8px;width:36px;height:36px;cursor:pointer;font-size:17px;line-height:1}
+main{padding:24px 0 64px}
+.view{display:none}.view.on{display:block}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:start}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+.card h2{margin:0 0 4px;font-size:16px}
+.card .sub{margin:0 0 16px;color:var(--muted);font-size:13px}
+.sticky{position:sticky;top:80px}
+label.f{display:block;margin-bottom:14px}
+label.f>span{display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px;margin-bottom:6px}
+label.f>span code{font-family:var(--mono);font-size:11.5px;color:var(--muted);font-weight:500}
+.req{color:var(--danger);font-size:11px;font-weight:700}
+.opt{color:var(--muted);font-size:11px;font-weight:500}
+input[type=text],input[type=url],input[type=search],select,textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);outline:none;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-weak)}
+input.err{border-color:var(--danger)}
+textarea{resize:vertical;min-height:90px;font-family:var(--mono);font-size:12.5px}
+.hint{font-size:12px;color:var(--muted);margin-top:4px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.sec-title{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.02em;margin:18px 0 10px;display:flex;align-items:center;gap:8px}
+.sec-title::after{content:"";flex:1;height:1px;background:var(--border)}
+details.more{border:1px dashed var(--border);border-radius:10px;padding:10px 14px;margin-top:6px}
+details.more summary{cursor:pointer;font-weight:600;font-size:13px}
+details.more[open] summary{margin-bottom:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.chip{border:1px solid var(--border);background:var(--surface-2);padding:6px 10px;border-radius:999px;font-size:12.5px;cursor:pointer;font-weight:500}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip.on{background:var(--accent-weak);border-color:var(--accent);color:var(--accent)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--border);background:var(--surface);padding:9px 14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;white-space:nowrap}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.danger{color:var(--danger)}
+.btn.sm{padding:5px 9px;font-size:12px;border-radius:6px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.toggles{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;margin:4px 0 4px}
+.toggles label{display:flex;align-items:center;gap:6px;cursor:pointer}
+.out{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:14px;font-family:var(--mono);font-size:12.5px;word-break:break-all;min-height:70px;line-height:1.6}
+.out .k{color:var(--accent);font-weight:600}
+.out .base{color:var(--text)}
+.out.empty{color:var(--muted);font-family:inherit}
+.channel{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:10px;background:var(--accent-weak);margin:14px 0}
+.channel b{font-size:15px}
+.channel small{color:var(--muted);font-size:11.5px}
+.msgs{display:flex;flex-direction:column;gap:6px;margin:12px 0}
+.msg{padding:8px 12px;border-radius:8px;font-size:12.5px;line-height:1.5}
+.msg.warn{background:var(--warn-weak);color:var(--warn)}
+.msg.err{background:var(--danger-weak);color:var(--danger)}
+.msg.info{background:var(--surface-2);color:var(--muted)}
+.msg.ok{background:var(--ok-weak);color:var(--ok)}
+table.kv{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+table.kv td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+table.kv td:first-child{font-family:var(--mono);color:var(--muted);width:42%;white-space:nowrap}
+table.kv td:last-child{word-break:break-all}
+.meta-fields{margin-top:14px}
+/* manage */
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+.stat small{color:var(--muted);font-size:12px;font-weight:600}
+.stat b{display:block;font-size:22px;margin-top:2px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.toolbar input[type=search]{flex:1 1 220px;min-width:0}
+.toolbar select{width:auto;min-width:120px}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
+table.list{width:100%;border-collapse:collapse;font-size:12.5px;min-width:1000px}
+table.list th{position:sticky;top:0;background:var(--surface-2);text-align:left;font-weight:700;color:var(--muted);font-size:12px;padding:10px;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+table.list td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top}
+table.list tr:hover td{background:color-mix(in srgb,var(--accent-weak) 35%,transparent)}
+table.list .url{font-family:var(--mono);font-size:11.5px;max-width:320px;word-break:break-all;color:var(--muted)}
+table.list .camp{font-weight:600}
+.sm-mono{font-family:var(--mono);font-size:11.5px}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.b-active{background:var(--ok-weak);color:var(--ok)}
+.b-paused{background:var(--warn-weak);color:var(--warn)}
+.b-ended{background:var(--surface-2);color:var(--muted)}
+.b-ch{background:var(--accent-weak);color:var(--accent)}
+.b-un{background:var(--danger-weak);color:var(--danger)}
+.status-sel{padding:3px 6px;font-size:12px;border-radius:6px;width:auto}
+.empty-state{padding:48px 16px;text-align:center;color:var(--muted)}
+.acts{display:flex;gap:4px;flex-wrap:nowrap}
+.bulk-list{max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:8px;margin-top:10px}
+.bulk-list div{padding:8px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11.5px;word-break:break-all}
+.guide h3{font-size:15px;margin:22px 0 8px}
+.guide table{width:100%;border-collapse:collapse;font-size:13px}
+.guide th,.guide td{border:1px solid var(--border);padding:8px 10px;text-align:left;vertical-align:top}
+.guide th{background:var(--surface-2);font-size:12px}
+.guide ul{margin:6px 0;padding-left:18px}
+.guide li{margin:3px 0}
+.guide code{font-family:var(--mono);font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.edit-banner{display:none;align-items:center;justify-content:space-between;gap:10px;background:var(--warn-weak);color:var(--warn);padding:10px 14px;border-radius:10px;margin-bottom:14px;font-weight:600;font-size:13px}
+.edit-banner.on{display:flex}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:600;font-size:13px;opacity:0;pointer-events:none;transition:all .2s;z-index:100}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:900px){
+  .grid{grid-template-columns:1fr}.sticky{position:static}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:560px){
+  .bar{height:auto;flex-wrap:wrap;padding:10px 0;gap:8px}
+  nav{margin-left:0;width:100%;order:3}
+  nav button{flex:1;padding:8px 6px}
+  .theme-btn{margin-left:auto}
+  .logo small{display:none}
+  .row2,.row3{grid-template-columns:1fr}
+  .card{padding:16px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap bar">
+    <div class="logo"><i>UTM</i>UTM 빌더 <small>GA4 기준</small></div>
+    <nav>
+      <button data-view="builder" class="on">생성</button>
+      <button data-view="manage">관리 <span id="navCount"></span></button>
+      <button data-view="guide">가이드</button>
+    </nav>
+    <button class="theme-btn" id="themeBtn" title="테마 전환">◐</button>
+  </div>
+</header>
+
+<main class="wrap">
+<!-- ================= BUILDER ================= -->
+<section class="view on" id="v-builder">
+  <div class="edit-banner" id="editBanner"><span>✎ 저장된 UTM을 수정 중입니다</span><button class="btn sm" id="cancelEdit">수정 취소</button></div>
+  <div class="grid">
+    <div class="card">
+      <h2>UTM 파라미터 입력</h2>
+      <p class="sub">랜딩 URL과 파라미터를 입력하면 GA4 형식의 UTM URL이 실시간으로 생성됩니다. 이미 UTM이 붙은 URL을 붙여넣으면 자동으로 분해해 채워줍니다.</p>
+
+      <label class="f"><span>랜딩 페이지 URL <span class="req">필수</span></span>
+        <input type="url" id="baseUrl" placeholder="https://www.example.com/event?no=12" autocomplete="off">
+      </label>
+
+      <div class="sec-title">매체 프리셋</div>
+      <div class="chips" id="presets"></div>
+      <div class="hint">프리셋은 GA4 기본 채널 그룹에 맞게 분류되도록 source/medium을 채워줍니다. 클릭 후 자유롭게 수정 가능.</div>
+
+      <div class="sec-title">핵심 파라미터</div>
+      <div class="row2">
+        <label class="f"><span>캠페인 소스 <code>utm_source</code> <span class="req">필수</span></span>
+          <input type="text" id="utm_source" list="dl_source" placeholder="naver, google, facebook">
+        </label>
+        <label class="f"><span>캠페인 매체 <code>utm_medium</code> <span class="req">필수</span></span>
+          <input type="text" id="utm_medium" list="dl_medium" placeholder="cpc, display, paid_social, email">
+        </label>
+      </div>
+      <label class="f"><span>캠페인 이름 <code>utm_campaign</code> <span class="req">필수</span></span>
+        <input type="text" id="utm_campaign" list="dl_campaign" placeholder="2610_brand_fw_sale">
+      </label>
+      <details class="more" id="nameHelper">
+        <summary>캠페인명 규칙 도우미 (날짜_브랜드_목적_구분)</summary>
+        <div class="row2">
+          <label class="f"><span>기간/날짜</span><input type="text" id="nh_date" placeholder="2610"></label>
+          <label class="f"><span>브랜드/상품</span><input type="text" id="nh_brand" placeholder="brandname"></label>
+        </div>
+        <div class="row2">
+          <label class="f"><span>목적</span>
+            <select id="nh_goal"><option value="">선택</option><option>sale</option><option>launch</option><option>awareness</option><option>traffic</option><option>lead</option><option>retention</option><option>event</option></select>
+          </label>
+          <label class="f"><span>구분 (선택)</span><input type="text" id="nh_extra" placeholder="fw, promo1"></label>
+        </div>
+        <button class="btn sm" id="nhApply">캠페인 이름에 적용</button>
+      </details>
+
+      <div class="sec-title">선택 파라미터</div>
+      <div class="row2">
+        <label class="f"><span>캠페인 ID <code>utm_id</code> <span class="opt">선택</span></span>
+          <input type="text" id="utm_id" placeholder="cmp_2610_01">
+        </label>
+        <label class="f"><span>캠페인 키워드 <code>utm_term</code> <span class="opt">선택</span></span>
+          <input type="text" id="utm_term" placeholder="겨울패딩">
+        </label>
+      </div>
+      <label class="f"><span>캠페인 콘텐츠 <code>utm_content</code> <span class="opt">선택</span></span>
+        <input type="text" id="utm_content" placeholder="banner_a, video_15s, cta_top">
+      </label>
+
+      <details class="more">
+        <summary>GA4 확장 파라미터 (source_platform · creative_format · marketing_tactic)</summary>
+        <label class="f"><span>소스 플랫폼 <code>utm_source_platform</code> <span class="opt">선택</span></span>
+          <input type="text" id="utm_source_platform" placeholder="naver_gfa, meta_ads, google_ads">
+        </label>
+        <div class="row2">
+          <label class="f"><span>소재 형식 <code>utm_creative_format</code></span>
+            <input type="text" id="utm_creative_format" list="dl_format" placeholder="video, display, native">
+          </label>
+          <label class="f"><span>마케팅 전술 <code>utm_marketing_tactic</code></span>
+            <input type="text" id="utm_marketing_tactic" list="dl_tactic" placeholder="prospecting, remarketing">
+          </label>
+        </div>
+        <div class="hint">utm_creative_format · utm_marketing_tactic은 GA4가 수집은 하지만 2026년 10월 현재 표준 보고서 측정기준으로는 노출되지 않는 것으로 알려져 있어, 사내 관리용 태그로 활용하는 것을 권장합니다.</div>
+      </details>
+
+      <div class="sec-title">입력 옵션</div>
+      <div class="toggles">
+        <label><input type="checkbox" id="optLower" checked> 소문자 자동 변환</label>
+        <label><input type="checkbox" id="optSpace" checked> 공백 → 언더스코어(_)</label>
+        <label><input type="checkbox" id="optHttps" checked> 프로토콜 없으면 https:// 추가</label>
+      </div>
+
+      <details class="more" id="bulkBox" style="margin-top:16px">
+        <summary>일괄 생성 (여러 랜딩 URL × 여러 utm_content)</summary>
+        <div class="hint" style="margin-bottom:10px">위에 입력한 source / medium / campaign 등은 공통으로 적용되고, 아래 목록의 조합만큼 URL이 만들어집니다.</div>
+        <div class="row2">
+          <label class="f"><span>랜딩 URL 목록 (한 줄에 하나)</span><textarea id="bulkUrls" placeholder="https://site.com/a&#10;https://site.com/b"></textarea></label>
+          <label class="f"><span>utm_content 목록 (선택, 한 줄에 하나)</span><textarea id="bulkContents" placeholder="banner_a&#10;banner_b"></textarea></label>
+        </div>
+        <div class="btns"><button class="btn sm" id="bulkPreview">미리보기</button><button class="btn sm primary" id="bulkSave" disabled>전체 저장</button></div>
+        <div id="bulkOut"></div>
+      </details>
+    </div>
+
+    <div class="sticky">
+      <div class="card">
+        <h2>생성된 UTM URL</h2>
+        <p class="sub">GA4 캠페인 측정기준(세션 소스/매체/캠페인)으로 수집됩니다.</p>
+        <div class="out empty" id="out">랜딩 URL과 필수 파라미터를 입력하세요.</div>
+        <div class="channel" id="channelBox" style="display:none">
+          <div><small>GA4 기본 채널 그룹 (예상)</small><br><b id="channelName">-</b></div>
+          <small id="channelWhy" style="text-align:right;max-width:55%"></small>
+        </div>
+        <div class="msgs" id="msgs"></div>
+        <div class="btns">
+          <button class="btn primary" id="copyBtn" disabled>URL 복사</button>
+          <button class="btn" id="openBtn" disabled>새 탭에서 열기</button>
+          <button class="btn" id="resetBtn">초기화</button>
+        </div>
+
+        <div class="meta-fields">
+          <div class="sec-title">관리 정보</div>
+          <div class="row2">
+            <label class="f"><span>담당자</span><input type="text" id="m_owner" list="dl_owner" placeholder="홍길동"></label>
+            <label class="f"><span>상태</span>
+              <select id="m_status"><option value="active">진행중</option><option value="paused">일시중지</option><option value="ended">종료</option></select>
+            </label>
+          </div>
+          <div class="row2">
+            <label class="f"><span>광고주/브랜드</span><input type="text" id="m_client" list="dl_client" placeholder="광고주명"></label>
+            <label class="f"><span>집행 기간</span><input type="text" id="m_period" placeholder="2026-10-22 ~ 2026-11-30"></label>
+          </div>
+          <label class="f"><span>메모</span><input type="text" id="m_memo" placeholder="소재/세팅 관련 메모"></label>
+          <button class="btn primary" id="saveBtn" style="width:100%" disabled>목록에 저장</button>
+        </div>
+
+        <details class="more" style="margin-top:14px">
+          <summary>파라미터 상세</summary>
+          <table class="kv" id="kv"></table>
+        </details>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MANAGE ================= -->
+<section class="view" id="v-manage">
+  <div class="stats">
+    <div class="stat"><small>전체 UTM</small><b id="s_total">0</b></div>
+    <div class="stat"><small>진행중</small><b id="s_active">0</b></div>
+    <div class="stat"><small>캠페인 수</small><b id="s_camp">0</b></div>
+    <div class="stat"><small>채널 미할당 (Unassigned 예상)</small><b id="s_un">0</b></div>
+  </div>
+  <div class="toolbar">
+    <input type="search" id="q" placeholder="캠페인, 소스, URL, 메모, 담당자 검색">
+    <select id="f_status"><option value="">전체 상태</option><option value="active">진행중</option><option value="paused">일시중지</option><option value="ended">종료</option></select>
+    <select id="f_channel"><option value="">전체 채널</option></select>
+    <select id="f_client"><option value="">전체 광고주</option></select>
+  </div>
+  <div class="toolbar">
+    <button class="btn sm" id="exportCsv">CSV 내보내기 (엑셀)</button>
+    <button class="btn sm" id="importCsvBtn">CSV 가져오기</button>
+    <button class="btn sm" id="exportJson">JSON 백업</button>
+    <button class="btn sm" id="importJsonBtn">JSON 복원</button>
+    <span style="flex:1"></span>
+    <button class="btn sm" id="copySel" disabled>선택 URL 복사</button>
+    <button class="btn sm danger" id="delSel" disabled>선택 삭제</button>
+    <input type="file" id="fileCsv" accept=".csv,text/csv" hidden>
+    <input type="file" id="fileJson" accept=".json,application/json" hidden>
+  </div>
+  <div class="tbl-wrap">
+    <table class="list">
+      <thead><tr>
+        <th style="width:32px"><input type="checkbox" id="selAll"></th>
+        <th data-sort="createdAt">생성일 ↕</th>
+        <th data-sort="status">상태</th>
+        <th data-sort="client">광고주</th>
+        <th data-sort="campaign">캠페인 ↕</th>
+        <th data-sort="sm">소스 / 매체 ↕</th>
+        <th>content / term</th>
+        <th data-sort="channel">예상 채널</th>
+        <th>최종 URL</th>
+        <th data-sort="owner">담당 / 메모</th>
+        <th>작업</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty-state" id="emptyState">저장된 UTM이 없습니다. <b>생성</b> 탭에서 URL을 만들고 저장해 보세요.</div>
+  </div>
+  <p class="hint" style="margin-top:10px">데이터는 이 브라우저(localStorage)에만 저장됩니다. 다른 PC·동료와 공유하려면 CSV/JSON으로 내보내 공유 드라이브에 보관하세요. 브라우저 캐시를 지우면 데이터가 삭제될 수 있습니다.</p>
+</section>
+
+<!-- ================= GUIDE ================= -->
+<section class="view" id="v-guide">
+  <div class="card guide">
+    <h2>GA4 UTM 운영 가이드</h2>
+    <p class="sub">빌더의 경고·채널 예측 로직이 따르는 기준입니다. (2026년 10월 기준, Google Analytics 고객센터 공개 기준 요약)</p>
+
+    <h3>1. GA4가 인식하는 UTM 파라미터</h3>
+    <table>
+      <tr><th>파라미터</th><th>GA4 측정기준</th><th>용도 / 예시</th></tr>
+      <tr><td><code>utm_source</code></td><td>세션 소스</td><td>유입 출처 — naver, google, facebook, newsletter</td></tr>
+      <tr><td><code>utm_medium</code></td><td>세션 매체</td><td>마케팅 매체 — cpc, display, paid_social, email</td></tr>
+      <tr><td><code>utm_campaign</code></td><td>세션 캠페인</td><td>캠페인명 — 2610_brand_fw_sale</td></tr>
+      <tr><td><code>utm_id</code></td><td>세션 캠페인 ID</td><td>데이터 가져오기(비용 데이터 업로드) 연결용 ID</td></tr>
+      <tr><td><code>utm_term</code></td><td>세션 수동 검색어</td><td>유료 키워드</td></tr>
+      <tr><td><code>utm_content</code></td><td>세션 수동 광고 콘텐츠</td><td>소재/링크 구분 — banner_a, cta_top</td></tr>
+      <tr><td><code>utm_source_platform</code></td><td>세션 소스 플랫폼</td><td>구매/운영 플랫폼 — google_ads, naver_gfa</td></tr>
+      <tr><td><code>utm_creative_format</code></td><td>(표준 보고서 미노출)</td><td>소재 형식 — video, display, native</td></tr>
+      <tr><td><code>utm_marketing_tactic</code></td><td>(표준 보고서 미노출)</td><td>타깃 전술 — prospecting, remarketing</td></tr>
+    </table>
+
+    <h3>2. 채널 그룹이 'Unassigned'가 되지 않으려면 — medium 권장값</h3>
+    <table>
+      <tr><th>원하는 채널</th><th>권장 utm_medium</th><th>조건</th></tr>
+      <tr><td>Paid Search</td><td><code>cpc</code>, <code>ppc</code>, <code>paid_search</code></td><td>source가 검색엔진(google, naver, daum, bing 등)</td></tr>
+      <tr><td>Paid Social</td><td><code>paid_social</code>, <code>cpc</code></td><td>source가 소셜(facebook, instagram, tiktok, kakaotalk 등)</td></tr>
+      <tr><td>Paid Video</td><td><code>paid_video</code>, <code>cpv</code></td><td>source가 동영상 사이트(youtube 등)</td></tr>
+      <tr><td>Display</td><td><code>display</code>, <code>banner</code>, <code>cpm</code>, <code>interstitial</code></td><td>source 무관</td></tr>
+      <tr><td>Paid Other</td><td><code>cp*</code>, <code>paid*</code></td><td>위 소스 목록에 해당하지 않는 유료 매체</td></tr>
+      <tr><td>Email</td><td><code>email</code></td><td>source 또는 medium에 email</td></tr>
+      <tr><td>SMS</td><td><code>sms</code></td><td>source 또는 medium이 sms</td></tr>
+      <tr><td>Affiliates</td><td><code>affiliate</code></td><td>—</td></tr>
+      <tr><td>Referral</td><td><code>referral</code>, <code>app</code>, <code>link</code></td><td>—</td></tr>
+      <tr><td>Organic Social</td><td><code>social</code>, <code>sm</code></td><td>또는 source가 소셜</td></tr>
+      <tr><td>Mobile Push</td><td><code>push</code>, <code>mobile</code>, <code>notification</code> 포함</td><td>—</td></tr>
+    </table>
+    <p class="hint">※ 빌더의 '예상 채널'은 GA4 기본 채널 그룹 규칙을 단순화해 구현한 추정치입니다. Google이 관리하는 소스 카테고리 목록은 수시로 갱신되므로, 실제 분류는 GA4 실시간 보고서에서 한 번 확인하는 것을 권장합니다.</p>
+
+    <h3>3. 네이밍 규칙 권장</h3>
+    <ul>
+      <li>GA4는 대소문자를 구분합니다 — <code>Naver</code>와 <code>naver</code>는 다른 소스로 집계됩니다. 소문자로 통일하세요.</li>
+      <li>공백 대신 언더스코어(<code>_</code>)를 사용합니다. 공백은 인코딩되어 <code>+</code> 또는 <code>%20</code>으로 남습니다.</li>
+      <li>한글 값은 가능하지만 URL이 길어지고 다른 툴에서 깨질 수 있어, source/medium/campaign은 영문 권장 / term(키워드)만 한글 허용 등 팀 규칙을 정해두세요.</li>
+      <li>캠페인명은 <code>기간_브랜드_목적_구분</code>처럼 고정 순서를 정하면 GA4 탐색 분석에서 필터링이 쉬워집니다.</li>
+    </ul>
+
+    <h3>4. 매체별 주의사항</h3>
+    <ul>
+      <li><b>Google Ads</b>: 자동 태그 추가(gclid) 사용 시 GA4는 기본적으로 자동 태그 값을 우선 적용합니다. 수동 UTM은 Google Ads 외 매체 위주로 사용하세요.</li>
+      <li><b>네이버 검색광고</b>: 키워드 단위 추적이 필요하면 <code>utm_term</code>에 키워드를 넣거나 매체 자체 추적 파라미터와 병행합니다.</li>
+      <li><b>Meta</b>: 광고 관리자 'URL 매개변수' 영역에 <code>{{campaign.name}}</code> 같은 동적 매크로를 넣으면 소재별 자동 태깅이 가능합니다. 빌더에서 매크로를 그대로 입력하려면 '소문자 자동 변환'을 끄세요.</li>
+      <li><b>카카오/네이버 GFA</b>: 소스를 kakao / naver로 두고 medium을 <code>display</code>로 지정하면 Display 채널로 분류됩니다.</li>
+    </ul>
+
+    <h3>5. 운영 체크리스트</h3>
+    <ul>
+      <li>집행 전: 생성 URL을 새 탭에서 열어 랜딩·리디렉션 후에도 UTM이 유지되는지 확인</li>
+      <li>집행 직후: GA4 → 실시간 보고서에서 소스/매체가 의도대로 찍히는지 확인</li>
+      <li>주 1회: 관리 탭에서 종료된 캠페인 상태 업데이트, CSV 백업</li>
+    </ul>
+  </div>
+</section>
+</main>
+
+<datalist id="dl_source"></datalist>
+<datalist id="dl_medium"></datalist>
+<datalist id="dl_campaign"></datalist>
+<datalist id="dl_owner"></datalist>
+<datalist id="dl_client"></datalist>
+<datalist id="dl_format"><option value="video"><option value="display"><option value="native"><option value="search"><option value="carousel"><option value="image"></datalist>
+<datalist id="dl_tactic"><option value="prospecting"><option value="remarketing"><option value="retargeting"><option value="lookalike"><option value="brand"><option value="onboarding"></datalist>
+<div id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const STORE = 'wylie_utm_builder_v1';
+const PREF = 'wylie_utm_builder_pref_v1';
+const KEYS = ['utm_source','utm_medium','utm_campaign','utm_id','utm_term','utm_content','utm_source_platform','utm_creative_format','utm_marketing_tactic'];
+const REQ = ['utm_source','utm_medium','utm_campaign'];
+
+const PRESETS = [
+  {n:'네이버 검색광고', s:'naver', m:'cpc', p:'naver_searchad'},
+  {n:'네이버 GFA', s:'naver', m:'display', p:'naver_gfa'},
+  {n:'네이버 브랜드검색', s:'naver', m:'cpc', p:'naver_brandsearch', f:'search'},
+  {n:'카카오모먼트', s:'kakao', m:'display', p:'kakao_moment'},
+  {n:'구글 검색', s:'google', m:'cpc', p:'google_ads', f:'search'},
+  {n:'구글 디스플레이', s:'google', m:'display', p:'google_ads', f:'display'},
+  {n:'유튜브 광고', s:'youtube', m:'paid_video', p:'google_ads', f:'video'},
+  {n:'메타(페이스북)', s:'facebook', m:'paid_social', p:'meta_ads'},
+  {n:'메타(인스타그램)', s:'instagram', m:'paid_social', p:'meta_ads'},
+  {n:'틱톡', s:'tiktok', m:'paid_social', p:'tiktok_ads'},
+  {n:'당근 광고', s:'daangn', m:'display', p:'daangn_ads'},
+  {n:'토스 광고', s:'toss', m:'display', p:'toss_ads'},
+  {n:'이메일 뉴스레터', s:'newsletter', m:'email'},
+  {n:'문자(SMS/LMS)', s:'sms', m:'sms'},
+  {n:'카카오톡 채널(무료)', s:'kakaotalk', m:'social'},
+  {n:'인스타그램 오가닉', s:'instagram', m:'social'},
+  {n:'제휴/파트너', s:'partner', m:'affiliate'},
+  {n:'앱 푸시', s:'app', m:'push'}
+];
+
+/* ---------- GA4 default channel group (simplified) ---------- */
+const SEARCH = ['google','naver','daum','bing','yahoo','baidu','yandex','duckduckgo','ecosia','zum','nate','search','m.search.naver.com','search.naver.com','search.daum.net'];
+const SOCIAL = ['facebook','fb','instagram','ig','meta','twitter','x','t.co','linkedin','pinterest','reddit','threads','tiktok','kakaotalk','kakaostory','kakao_story','band','line','snapchat','tumblr','quora','weibo','wechat','blog.naver.com','naver_blog','cafe.naver.com','tistory','brunch'];
+const VIDEO = ['youtube','youtube.com','m.youtube.com','vimeo','twitch','dailymotion','chzzk','afreecatv','soop','tiktok'];
+const SHOPPING = ['google shopping','shopping','smartstore','coupang','11st','gmarket','auction','ssg','musinsa','ohou'];
+const PAID_RE = /^(.*cp.*|ppc|retargeting|paid.*)$/;
+const has = (list, v) => list.some(x => v === x || v.endsWith('.'+x) || v.startsWith(x+'.'));
+
+function predictChannel(p){
+  const s = (p.utm_source||'').toLowerCase().trim();
+  const m = (p.utm_medium||'').toLowerCase().trim();
+  const c = (p.utm_campaign||'').toLowerCase().trim();
+  if(!s && !m) return {ch:'-', why:''};
+  const paid = PAID_RE.test(m);
+  if(c.includes('cross-network')) return {ch:'Cross-network', why:'캠페인명에 cross-network 포함'};
+  if((has(SHOPPING,s) || /^(.*(([^a-df-z]|^)shop|shopping).*)$/.test(c)) && paid) return {ch:'Paid Shopping', why:'쇼핑 소스/캠페인 + 유료 매체'};
+  if(has(SEARCH,s) && paid) return {ch:'Paid Search', why:'검색 소스 + 유료 매체(cp*/paid*)'};
+  if(has(SOCIAL,s) && paid && !(s==='tiktok' && false)) return {ch:'Paid Social', why:'소셜 소스 + 유료 매체'};
+  if(has(VIDEO,s) && paid) return {ch:'Paid Video', why:'동영상 소스 + 유료 매체'};
+  if(['display','banner','expandable','interstitial','cpm'].includes(m)) return {ch:'Display', why:'medium이 display 계열'};
+  if(paid) return {ch:'Paid Other', why:'유료 매체이나 소스가 검색/소셜/동영상 목록에 없음'};
+  if(has(SHOPPING,s) || /(([^a-df-z]|^)shop|shopping)/.test(c)) return {ch:'Organic Shopping', why:'쇼핑 소스/캠페인'};
+  if(has(SOCIAL,s) || ['social','social-network','social-media','sm','social network','social media'].includes(m)) return {ch:'Organic Social', why:'소셜 소스 또는 medium=social'};
+  if(has(VIDEO,s) || /video/.test(m)) return {ch:'Organic Video', why:'동영상 소스 또는 medium에 video'};
+  if(has(SEARCH,s) || m==='organic') return {ch:'Organic Search', why:'검색 소스 또는 medium=organic'};
+  if(['referral','app','link'].includes(m)) return {ch:'Referral', why:'medium=referral/app/link'};
+  if(/^(email|e-mail|e_mail|e mail)$/.test(s) || /^(email|e-mail|e_mail|e mail)$/.test(m)) return {ch:'Email', why:'source/medium이 email'};
+  if(m==='affiliate') return {ch:'Affiliates', why:'medium=affiliate'};
+  if(m==='audio') return {ch:'Audio', why:'medium=audio'};
+  if(s==='sms' || m==='sms') return {ch:'SMS', why:'source/medium=sms'};
+  if(/push$/.test(m) || m.includes('mobile') || m.includes('notification') || s==='firebase') return {ch:'Mobile Push Notifications', why:'medium에 push/mobile/notification'};
+  return {ch:'Unassigned', why:'GA4 기본 규칙에 맞는 source/medium 조합이 아님'};
+}
+
+/* ---------- storage ---------- */
+let data = [];
+function load(){ try{ data = JSON.parse(localStorage.getItem(STORE)||'[]') || []; }catch(e){ data = []; } }
+function persist(){ try{ localStorage.setItem(STORE, JSON.stringify(data)); }catch(e){ toast('저장 실패: 브라우저 저장소를 사용할 수 없습니다'); } }
+function loadPref(){ try{ return JSON.parse(localStorage.getItem(PREF)||'{}')||{}; }catch(e){ return {}; } }
+function savePref(o){ try{ localStorage.setItem(PREF, JSON.stringify(Object.assign(loadPref(),o))); }catch(e){} }
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate = t => { const d=new Date(t); const z=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`; };
+
+function toast(t){ const el=$('#toast'); el.textContent=t; el.classList.add('on'); clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove('on'),1800); }
+async function copy(t){
+  try{ await navigator.clipboard.writeText(t); }
+  catch(e){ const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(_){} ta.remove(); }
+  toast('클립보드에 복사했습니다');
+}
+
+/* ---------- tabs & theme ---------- */
+$$('nav button').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
+function showView(v){
+  $$('nav button').forEach(x => x.classList.toggle('on', x.dataset.view===v));
+  $$('.view').forEach(x => x.classList.toggle('on', x.id==='v-'+v));
+  if(v==='manage') renderList();
+  window.scrollTo({top:0});
+}
+(function(){ const t=loadPref().theme; if(t) document.documentElement.setAttribute('data-theme',t); })();
+$('#themeBtn').addEventListener('click', () => {
+  const cur = document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  const nx = cur==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme', nx); savePref({theme:nx});
+});
+
+/* ---------- builder ---------- */
+const opt = () => ({lower:$('#optLower').checked, space:$('#optSpace').checked, https:$('#optHttps').checked});
+(function(){ const p=loadPref(); if(p.lower===false) $('#optLower').checked=false; if(p.space===false) $('#optSpace').checked=false; if(p.https===false) $('#optHttps').checked=false; })();
+['optLower','optSpace','optHttps'].forEach(id => $('#'+id).addEventListener('change', () => { savePref({lower:$('#optLower').checked, space:$('#optSpace').checked, https:$('#optHttps').checked}); update(); }));
+
+function norm(v){
+  const o=opt(); v=(v||'').trim();
+  if(o.space) v=v.replace(/\s+/g,'_');
+  if(o.lower) v=v.toLowerCase();
+  return v;
+}
+function readParams(){ const p={}; KEYS.forEach(k => { const v=norm($('#'+k).value); if(v) p[k]=v; }); return p; }
+
+function parseBase(raw){
+  raw=(raw||'').trim(); if(!raw) return {err:'empty'};
+  let s=raw;
+  if(!/^[a-z][a-z0-9+.-]*:\/\//i.test(s)){
+    if(opt().https) s='https://'+s; else return {err:'프로토콜(https://)이 없는 URL입니다.'};
+  }
+  try{ const u=new URL(s); if(!u.hostname.includes('.') && u.hostname!=='localhost') return {err:'도메인 형식이 올바르지 않습니다.'}; return {url:u, added:s!==raw}; }
+  catch(e){ return {err:'URL 형식이 올바르지 않습니다.'}; }
+}
+function buildUrl(baseRaw, params){
+  const r=parseBase(baseRaw); if(r.err) return r;
+  const u=r.url;
+  KEYS.forEach(k => u.searchParams.delete(k));
+  const sp = new URLSearchParams(u.search);
+  KEYS.forEach(k => { if(params[k]) sp.append(k, params[k]); });
+  const q = sp.toString().replace(/\+/g,'%20');
+  const final = u.origin + u.pathname + (q?'?'+q:'') + u.hash;
+  return {final, added:r.added, u};
+}
+
+// paste a URL that already has UTM → split
+function absorbUtm(){
+  const el=$('#baseUrl'); const raw=el.value.trim(); if(!raw || !/utm_/i.test(raw)) return;
+  const r=parseBase(raw); if(r.err) return;
+  let n=0;
+  KEYS.forEach(k => { const v=r.url.searchParams.get(k); if(v!==null){ $('#'+k).value=v; r.url.searchParams.delete(k); n++; } });
+  if(n){ const q=r.url.searchParams.toString(); el.value=r.url.origin+r.url.pathname+(q?'?'+q:'')+r.url.hash; toast(`기존 UTM ${n}개를 분해해 입력했습니다`); if(['utm_source_platform','utm_creative_format','utm_marketing_tactic'].some(k=>$('#'+k).value)) document.querySelector('#v-builder details.more:not(#nameHelper):not(#bulkBox)').open=true; update(); }
+}
+$('#baseUrl').addEventListener('blur', absorbUtm);
+$('#baseUrl').addEventListener('paste', () => setTimeout(absorbUtm,0));
+
+let current = null;
+function update(){
+  const p=readParams(); const raw=$('#baseUrl').value;
+  const msgs=[]; const out=$('#out');
+  REQ.forEach(k => $('#'+k).classList.remove('err')); $('#baseUrl').classList.remove('err');
+  const missing = REQ.filter(k => !p[k]);
+  const b = raw.trim() ? buildUrl(raw,p) : {err:'empty'};
+  if(b.err && b.err!=='empty'){ msgs.push(['err',b.err]); $('#baseUrl').classList.add('err'); }
+  // value checks
+  KEYS.forEach(k => {
+    const v=$('#'+k).value; if(!v.trim()) return;
+    if(!opt().lower && /[A-Z]/.test(v) && !/\{\{|\{/.test(v)) msgs.push(['warn',`${k}에 대문자가 있습니다. GA4는 대소문자를 구분해 다른 값으로 집계합니다.`]);
+    if(!opt().space && /\s/.test(v.trim())) msgs.push(['warn',`${k}에 공백이 있습니다. %20으로 인코딩되어 리포트 가독성이 떨어집니다.`]);
+  });
+  ['utm_source','utm_medium','utm_campaign'].forEach(k => { if(/[ㄱ-ㅎ가-힣]/.test(p[k]||'')) msgs.push(['info',`${k}에 한글이 포함되어 있습니다. 동작은 하지만 URL이 길어지고 일부 툴에서 깨질 수 있어 영문 사용을 권장합니다.`]); });
+  if(/[?&#=]/.test(Object.values(p).join(''))) msgs.push(['warn','파라미터 값에 ?, &, #, = 문자가 있습니다. 자동 인코딩되지만 의도한 값인지 확인하세요.']);
+
+  const pc = predictChannel(p);
+  if(p.utm_source || p.utm_medium){
+    $('#channelBox').style.display='flex';
+    $('#channelName').textContent = pc.ch;
+    $('#channelWhy').textContent = pc.why;
+    $('#channelBox').style.background = pc.ch==='Unassigned' ? 'var(--danger-weak)' : 'var(--accent-weak)';
+    if(pc.ch==='Unassigned') msgs.push(['warn','이 조합은 GA4에서 Unassigned(미할당)로 분류될 가능성이 높습니다. 가이드 탭의 medium 권장값을 확인하세요.']);
+    if(pc.ch==='Paid Other' && p.utm_source) msgs.push(['info',`'${p.utm_source}'는 GA4 소스 카테고리 목록에 없을 수 있어 Paid Other로 분류될 수 있습니다. 의도한 채널이 Display라면 medium을 display로 지정하세요.`]);
+  } else $('#channelBox').style.display='none';
+  if(p.utm_source==='google' && /^(cpc|ppc|paid.*)$/.test(p.utm_medium||'')) msgs.push(['info','Google Ads 자동 태그(gclid) 사용 시 GA4는 기본적으로 자동 태그 값을 우선 적용합니다. 수동 UTM은 참고용으로만 남을 수 있습니다.']);
+
+  if(b.final){
+    if(b.added) msgs.push(['info','https:// 를 자동으로 추가했습니다.']);
+    if(b.final.length>2000) msgs.push(['warn',`URL 길이가 ${b.final.length}자입니다. 일부 매체·브라우저는 2,000자 이상을 잘라낼 수 있습니다.`]);
+    if(b.u && b.u.hash && b.u.hash.includes('?')) msgs.push(['warn','해시(#) 뒤에 쿼리가 있는 SPA 주소입니다. 이 경우 UTM이 해시 앞에 붙도록 생성했으니 실제 랜딩에서 유지되는지 확인하세요.']);
+  }
+  if(missing.length){ missing.forEach(k => { if(raw.trim()) $('#'+k).classList.add('err'); }); }
+
+  const ready = b.final && !missing.length;
+  if(b.final){
+    out.classList.remove('empty');
+    const [head, ...rest] = b.final.split('?');
+    let html = '<span class="base">'+esc(head)+'</span>';
+    if(rest.length){
+      const qs = rest.join('?'); const [query, hash] = qs.split('#');
+      html += '?' + query.split('&').map(kv => { const [k,...v]=kv.split('='); return (KEYS.includes(k)?'<span class="k">'+esc(k)+'</span>':esc(k))+(v.length?'='+esc(v.join('=')):''); }).join('&amp;');
+      if(hash!==undefined) html += '#'+esc(hash);
+    }
+    out.innerHTML = html;
+    if(missing.length) msgs.unshift(['err','필수 파라미터 누락: '+missing.join(', ')]);
+  } else { out.classList.add('empty'); out.textContent='랜딩 URL과 필수 파라미터를 입력하세요.'; }
+  if(ready && !msgs.some(m=>m[0]==='warn'||m[0]==='err')) msgs.unshift(['ok','GA4 형식에 맞는 UTM URL입니다.']);
+
+  $('#msgs').innerHTML = msgs.map(m => `<div class="msg ${m[0]}">${esc(m[1])}</div>`).join('');
+  $('#kv').innerHTML = KEYS.filter(k=>p[k]).map(k => `<tr><td>${k}</td><td>${esc(p[k])}</td></tr>`).join('') || '<tr><td colspan="2" style="color:var(--muted)">입력된 파라미터가 없습니다</td></tr>';
+  ['copyBtn','openBtn','saveBtn'].forEach(id => $('#'+id).disabled = !ready);
+  current = ready ? {base:raw.trim(), params:p, final:b.final, channel:pc.ch} : null;
+  $$('#presets .chip').forEach(ch => ch.classList.toggle('on', ch.dataset.s===p.utm_source && ch.dataset.m===p.utm_medium));
+}
+KEYS.concat(['baseUrl']).forEach(id => $('#'+id).addEventListener('input', update));
+
+// presets
+$('#presets').innerHTML = PRESETS.map((x,i) => `<button class="chip" data-i="${i}" data-s="${x.s}" data-m="${x.m}">${esc(x.n)}</button>`).join('');
+$('#presets').addEventListener('click', e => {
+  const b=e.target.closest('.chip'); if(!b) return; const x=PRESETS[+b.dataset.i];
+  $('#utm_source').value=x.s; $('#utm_medium').value=x.m;
+  $('#utm_source_platform').value=x.p||''; $('#utm_creative_format').value=x.f||'';
+  update();
+});
+
+// name helper
+$('#nhApply').addEventListener('click', () => {
+  const parts=['nh_date','nh_brand','nh_goal','nh_extra'].map(id=>norm($('#'+id).value)).filter(Boolean);
+  if(!parts.length){ toast('항목을 하나 이상 입력하세요'); return; }
+  $('#utm_campaign').value=parts.join('_'); update(); toast('캠페인 이름을 적용했습니다');
+});
+(function(){ const d=new Date(); $('#nh_date').placeholder=String(d.getFullYear()).slice(2)+String(d.getMonth()+1).padStart(2,'0'); })();
+
+$('#copyBtn').addEventListener('click', () => current && copy(current.final));
+$('#openBtn').addEventListener('click', () => current && window.open(current.final,'_blank','noopener'));
+$('#resetBtn').addEventListener('click', () => { resetForm(); toast('초기화했습니다'); });
+function resetForm(){
+  ['baseUrl',...KEYS,'m_owner','m_client','m_period','m_memo'].forEach(id => $('#'+id).value='');
+  $('#m_status').value='active'; exitEdit(); update();
+}
+
+let editingId = null;
+function exitEdit(){ editingId=null; $('#editBanner').classList.remove('on'); $('#saveBtn').textContent='목록에 저장'; }
+$('#cancelEdit').addEventListener('click', () => { resetForm(); });
+
+function metaFromForm(){ return {owner:$('#m_owner').value.trim(), status:$('#m_status').value, client:$('#m_client').value.trim(), period:$('#m_period').value.trim(), memo:$('#m_memo').value.trim()}; }
+function makeRecord(base, params, final, channel, meta){ const now=Date.now(); return Object.assign({id:uid(), createdAt:now, updatedAt:now, baseUrl:base, params, finalUrl:final, channel}, meta); }
+
+$('#saveBtn').addEventListener('click', () => {
+  if(!current) return;
+  const meta = metaFromForm();
+  if(editingId){
+    const r = data.find(x=>x.id===editingId);
+    if(r){ Object.assign(r, {baseUrl:current.base, params:current.params, finalUrl:current.final, channel:current.channel, updatedAt:Date.now()}, meta); }
+    persist(); exitEdit(); toast('수정 내용을 저장했습니다'); refreshLists(); return;
+  }
+  const dup = data.find(x => x.finalUrl===current.final);
+  if(dup && !confirm('동일한 UTM URL이 이미 저장되어 있습니다 ('+fmtDate(dup.createdAt)+'). 그래도 저장할까요?')) return;
+  data.unshift(makeRecord(current.base, current.params, current.final, current.channel, meta));
+  persist(); refreshLists(); toast('목록에 저장했습니다');
+});
+
+// bulk
+let bulkItems = [];
+$('#bulkPreview').addEventListener('click', () => {
+  const urls = $('#bulkUrls').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const contents = $('#bulkContents').value.split('\n').map(s=>norm(s)).filter(Boolean);
+  const p = readParams(); const miss = REQ.filter(k=>!p[k]);
+  bulkItems = [];
+  if(!urls.length){ $('#bulkOut').innerHTML='<div class="msg err" style="margin-top:10px">랜딩 URL을 한 줄 이상 입력하세요.</div>'; $('#bulkSave').disabled=true; return; }
+  if(miss.length){ $('#bulkOut').innerHTML='<div class="msg err" style="margin-top:10px">공통 필수 파라미터 누락: '+miss.join(', ')+'</div>'; $('#bulkSave').disabled=true; return; }
+  const errs=[];
+  urls.forEach(u => (contents.length?contents:[p.utm_content||'']).forEach(c => {
+    const pp = Object.assign({}, p); if(c) pp.utm_content=c; else delete pp.utm_content;
+    const b = buildUrl(u, pp);
+    if(b.err) errs.push(u); else bulkItems.push({base:u, params:pp, final:b.final, channel:predictChannel(pp).ch});
+  }));
+  $('#bulkOut').innerHTML = (errs.length?`<div class="msg err" style="margin-top:10px">형식 오류로 제외된 URL ${errs.length}개: ${esc(errs.join(', '))}</div>`:'')
+    + `<div class="msg info" style="margin-top:10px">${bulkItems.length}개 URL이 생성됩니다.</div>`
+    + `<div class="bulk-list">${bulkItems.map(x=>`<div>${esc(x.final)}</div>`).join('')}</div>`
+    + (bulkItems.length?`<div class="btns" style="margin-top:8px"><button class="btn sm" id="bulkCopy">전체 복사</button></div>`:'');
+  $('#bulkSave').disabled = !bulkItems.length;
+  const bc=$('#bulkCopy'); if(bc) bc.addEventListener('click', () => copy(bulkItems.map(x=>x.final).join('\n')));
+});
+$('#bulkSave').addEventListener('click', () => {
+  if(!bulkItems.length) return; const meta=metaFromForm();
+  bulkItems.slice().reverse().forEach(x => data.unshift(makeRecord(x.base,x.params,x.final,x.channel,meta)));
+  persist(); refreshLists(); toast(bulkItems.length+'개를 저장했습니다'); bulkItems=[]; $('#bulkSave').disabled=true; $('#bulkOut').innerHTML='';
+});
+
+/* ---------- manage ---------- */
+let sortKey='createdAt', sortDir=-1; const selected=new Set();
+const STATUS_LABEL={active:'진행중',paused:'일시중지',ended:'종료'};
+function sortVal(r,k){
+  if(k==='campaign') return r.params.utm_campaign||'';
+  if(k==='sm') return (r.params.utm_source||'')+'/'+(r.params.utm_medium||'');
+  return r[k]==null?'':r[k];
+}
+function filtered(){
+  const q=$('#q').value.trim().toLowerCase(), st=$('#f_status').value, ch=$('#f_channel').value, cl=$('#f_client').value;
+  return data.filter(r => {
+    if(st && r.status!==st) return false;
+    if(ch && r.channel!==ch) return false;
+    if(cl && (r.client||'')!==cl) return false;
+    if(q){ const hay=[r.finalUrl,r.owner,r.memo,r.client,r.period,...Object.values(r.params)].join(' ').toLowerCase(); if(!hay.includes(q)) return false; }
+    return true;
+  }).sort((a,b) => { const x=sortVal(a,sortKey), y=sortVal(b,sortKey); return (x>y?1:x<y?-1:0)*sortDir; });
+}
+function fillSelect(id, values, label){
+  const el=$('#'+id), cur=el.value;
+  el.innerHTML = `<option value="">${label}</option>` + values.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  if(values.includes(cur)) el.value=cur;
+}
+function uniq(arr){ return Array.from(new Set(arr.filter(Boolean))).sort(); }
+function refreshLists(){
+  $('#navCount').textContent = data.length?`(${data.length})`:'';
+  const fill=(id,vals)=>{ $('#'+id).innerHTML=uniq(vals).map(v=>`<option value="${esc(v)}">`).join(''); };
+  fill('dl_source', data.map(r=>r.params.utm_source).concat(PRESETS.map(p=>p.s)));
+  fill('dl_medium', data.map(r=>r.params.utm_medium).concat(['cpc','display','paid_social','paid_video','email','sms','social','referral','affiliate','push','organic']));
+  fill('dl_campaign', data.map(r=>r.params.utm_campaign));
+  fill('dl_owner', data.map(r=>r.owner)); fill('dl_client', data.map(r=>r.client));
+  if($('#v-manage').classList.contains('on')) renderList();
+}
+function renderList(){
+  fillSelect('f_channel', uniq(data.map(r=>r.channel)), '전체 채널');
+  fillSelect('f_client', uniq(data.map(r=>r.client)), '전체 광고주');
+  $('#s_total').textContent=data.length;
+  $('#s_active').textContent=data.filter(r=>r.status==='active').length;
+  $('#s_camp').textContent=uniq(data.map(r=>r.params.utm_campaign)).length;
+  $('#s_un').textContent=data.filter(r=>r.channel==='Unassigned').length;
+  const rows=filtered();
+  Array.from(selected).forEach(id => { if(!data.some(r=>r.id===id)) selected.delete(id); });
+  $('#emptyState').style.display = rows.length?'none':'block';
+  if(data.length && !rows.length) $('#emptyState').textContent='검색 조건에 맞는 항목이 없습니다.';
+  else $('#emptyState').innerHTML='저장된 UTM이 없습니다. <b>생성</b> 탭에서 URL을 만들고 저장해 보세요.';
+  $('#tbody').innerHTML = rows.map(r => {
+    const p=r.params;
+    return `<tr data-id="${r.id}">
+      <td><input type="checkbox" class="sel" ${selected.has(r.id)?'checked':''}></td>
+      <td class="sm-mono" style="white-space:nowrap">${esc(fmtDate(r.createdAt))}${r.period?`<br><span style="color:var(--muted)">${esc(r.period)}</span>`:''}</td>
+      <td><select class="status-sel badge b-${r.status}" data-act="status">${Object.entries(STATUS_LABEL).map(([k,v])=>`<option value="${k}" ${r.status===k?'selected':''}>${v}</option>`).join('')}</select></td>
+      <td>${esc(r.client||'-')}</td>
+      <td class="camp">${esc(p.utm_campaign)}${p.utm_id?`<br><span class="sm-mono" style="color:var(--muted)">id: ${esc(p.utm_id)}</span>`:''}</td>
+      <td class="sm-mono">${esc(p.utm_source)} / ${esc(p.utm_medium)}${p.utm_source_platform?`<br><span style="color:var(--muted)">${esc(p.utm_source_platform)}</span>`:''}</td>
+      <td class="sm-mono">${esc(p.utm_content||'-')}${p.utm_term?`<br><span style="color:var(--muted)">${esc(p.utm_term)}</span>`:''}</td>
+      <td><span class="badge ${r.channel==='Unassigned'?'b-un':'b-ch'}">${esc(r.channel)}</span></td>
+      <td class="url">${esc(r.finalUrl)}</td>
+      <td>${esc(r.owner||'-')}${r.memo?`<br><span style="color:var(--muted);font-size:12px">${esc(r.memo)}</span>`:''}</td>
+      <td><div class="acts">
+        <button class="btn sm" data-act="copy">복사</button>
+        <button class="btn sm" data-act="open">열기</button>
+        <button class="btn sm" data-act="edit">수정</button>
+        <button class="btn sm" data-act="dup">복제</button>
+        <button class="btn sm danger" data-act="del">삭제</button>
+      </div></td></tr>`;
+  }).join('');
+  $('#selAll').checked = rows.length>0 && rows.every(r=>selected.has(r.id));
+  updateSelBtns();
+}
+function updateSelBtns(){ $('#copySel').disabled=!selected.size; $('#delSel').disabled=!selected.size; $('#delSel').textContent=selected.size?`선택 삭제 (${selected.size})`:'선택 삭제'; }
+
+function loadIntoBuilder(r, asCopy){
+  $('#baseUrl').value=r.baseUrl;
+  KEYS.forEach(k => $('#'+k).value = r.params[k]||'');
+  $('#m_owner').value=r.owner||''; $('#m_status').value=r.status||'active'; $('#m_client').value=r.client||''; $('#m_period').value=r.period||''; $('#m_memo').value=r.memo||'';
+  if(asCopy){ exitEdit(); } else { editingId=r.id; $('#editBanner').classList.add('on'); $('#saveBtn').textContent='수정 저장'; }
+  showView('builder'); update();
+}
+$('#tbody').addEventListener('click', e => {
+  const tr=e.target.closest('tr'); if(!tr) return; const r=data.find(x=>x.id===tr.dataset.id); if(!r) return;
+  if(e.target.classList.contains('sel')){ e.target.checked?selected.add(r.id):selected.delete(r.id); updateSelBtns(); return; }
+  const act=e.target.dataset.act; if(!act || act==='status') return;
+  if(act==='copy') copy(r.finalUrl);
+  if(act==='open') window.open(r.finalUrl,'_blank','noopener');
+  if(act==='edit') loadIntoBuilder(r,false);
+  if(act==='dup'){ loadIntoBuilder(r,true); toast('복제본을 생성 탭에 불러왔습니다. 수정 후 저장하세요'); }
+  if(act==='del' && confirm('이 UTM을 삭제할까요?')){ data=data.filter(x=>x.id!==r.id); selected.delete(r.id); persist(); refreshLists(); renderList(); }
+});
+$('#tbody').addEventListener('change', e => {
+  if(e.target.dataset.act!=='status') return; const tr=e.target.closest('tr'); const r=data.find(x=>x.id===tr.dataset.id);
+  if(r){ r.status=e.target.value; r.updatedAt=Date.now(); persist(); renderList(); }
+});
+$('#selAll').addEventListener('change', e => { filtered().forEach(r => e.target.checked?selected.add(r.id):selected.delete(r.id)); renderList(); });
+$('#copySel').addEventListener('click', () => copy(data.filter(r=>selected.has(r.id)).map(r=>r.finalUrl).join('\n')));
+$('#delSel').addEventListener('click', () => { if(!confirm(`선택한 ${selected.size}개를 삭제할까요?`)) return; data=data.filter(r=>!selected.has(r.id)); selected.clear(); persist(); refreshLists(); renderList(); });
+['q','f_status','f_channel','f_client'].forEach(id => $('#'+id).addEventListener('input', renderList));
+$$('th[data-sort]').forEach(th => th.addEventListener('click', () => { const k=th.dataset.sort; if(sortKey===k) sortDir*=-1; else { sortKey=k; sortDir=k==='createdAt'?-1:1; } renderList(); }));
+
+/* ---------- import / export ---------- */
+const CSV_COLS = [['id','id'],['생성일','createdAt'],['상태','status'],['광고주','client'],['집행기간','period'],['담당자','owner'],['랜딩URL','baseUrl'],...KEYS.map(k=>[k,k]),['예상채널','channel'],['최종URL','finalUrl'],['메모','memo']];
+function csvCell(v){ v=String(v==null?'':v); return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+function download(name, content, type){ const blob=new Blob([content],{type}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},500); }
+const stamp = () => { const d=new Date(); return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0'); };
+$('#exportCsv').addEventListener('click', () => {
+  const rows = (selected.size?data.filter(r=>selected.has(r.id)):filtered());
+  if(!rows.length){ toast('내보낼 항목이 없습니다'); return; }
+  const lines=[CSV_COLS.map(c=>c[0]).join(',')].concat(rows.map(r => CSV_COLS.map(([,k]) => {
+    if(k==='createdAt') return csvCell(fmtDate(r.createdAt));
+    if(k==='status') return csvCell(STATUS_LABEL[r.status]||r.status);
+    if(KEYS.includes(k)) return csvCell(r.params[k]);
+    return csvCell(r[k]);
+  }).join(',')));
+  download(`utm_list_${stamp()}.csv`, '\ufeff'+lines.join('\r\n'), 'text/csv;charset=utf-8');
+  toast(`${rows.length}개 항목을 내보냈습니다`);
+});
+function parseCSV(text){
+  const rows=[]; let row=[], cell='', q=false;
+  text=text.replace(/^\ufeff/,'');
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){cell+='"';i++;} else q=false; } else cell+=c; }
+    else if(c==='"') q=true;
+    else if(c===','){ row.push(cell); cell=''; }
+    else if(c==='\n'||c==='\r'){ if(c==='\r'&&text[i+1]==='\n') i++; row.push(cell); rows.push(row); row=[]; cell=''; }
+    else cell+=c;
+  }
+  if(cell!==''||row.length){ row.push(cell); rows.push(row); }
+  return rows.filter(r=>r.some(x=>x.trim()!==''));
+}
+$('#importCsvBtn').addEventListener('click', () => $('#fileCsv').click());
+$('#fileCsv').addEventListener('change', e => {
+  const f=e.target.files[0]; if(!f) return; const rd=new FileReader();
+  rd.onload = () => {
+    const rows=parseCSV(rd.result); if(rows.length<2){ toast('가져올 데이터가 없습니다'); return; }
+    const head=rows[0].map(h=>h.trim()); const idx=n=>head.indexOf(n);
+    const revStatus={진행중:'active',일시중지:'paused',종료:'ended'};
+    let add=0, skip=0;
+    rows.slice(1).forEach(c => {
+      const g=n=>{ const i=idx(n); return i>=0?(c[i]||'').trim():''; };
+      const params={}; KEYS.forEach(k=>{ const v=g(k); if(v) params[k]=v; });
+      const base=g('랜딩URL')||g('baseUrl');
+      if(!base || REQ.some(k=>!params[k])){ skip++; return; }
+      const b=buildUrl(base, params); if(b.err){ skip++; return; }
+      const id=g('id');
+      if(id && data.some(x=>x.id===id)){ skip++; return; }
+      const st=g('상태'); const created=Date.parse(g('생성일').replace(' ','T'));
+      const r=makeRecord(base, params, b.final, predictChannel(params).ch, {owner:g('담당자'), status:revStatus[st]||(['active','paused','ended'].includes(st)?st:'active'), client:g('광고주'), period:g('집행기간'), memo:g('메모')});
+      if(id) r.id=id; if(!isNaN(created)) r.createdAt=created;
+      data.push(r); add++;
+    });
+    persist(); refreshLists(); renderList(); toast(`${add}개 추가${skip?`, ${skip}개 건너뜀(중복/필수값 누락)`:''}`);
+  };
+  rd.readAsText(f,'utf-8'); e.target.value='';
+});
+$('#exportJson').addEventListener('click', () => { download(`utm_backup_${stamp()}.json`, JSON.stringify({version:1, exportedAt:new Date().toISOString(), items:data},null,2), 'application/json'); toast('JSON 백업 파일을 저장했습니다'); });
+$('#importJsonBtn').addEventListener('click', () => $('#fileJson').click());
+$('#fileJson').addEventListener('change', e => {
+  const f=e.target.files[0]; if(!f) return; const rd=new FileReader();
+  rd.onload = () => {
+    try{
+      const j=JSON.parse(rd.result); const items=Array.isArray(j)?j:j.items; if(!Array.isArray(items)) throw 0;
+      const replace = data.length && confirm('기존 목록을 백업 파일로 교체할까요?\n[확인] 교체  /  [취소] 기존 목록에 병합');
+      if(replace) data=[];
+      let add=0; items.forEach(r => { if(r && r.finalUrl && r.params && !data.some(x=>x.id===r.id)){ data.push(r); add++; } });
+      persist(); refreshLists(); renderList(); toast(`${add}개 항목을 복원했습니다`);
+    }catch(err){ toast('올바른 백업 파일이 아닙니다'); }
+  };
+  rd.readAsText(f,'utf-8'); e.target.value='';
+});
+
+/* ---------- init ---------- */
+load(); refreshLists(); update();
+})();
+</script>
+</body>
+</html>
