@@ -168,6 +168,19 @@ table.xgrid tr:hover td{background:color-mix(in srgb,var(--accent-weak) 30%,tran
 .cnt{display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px}
 .cnt span{margin-right:4px}
 .cnt input{width:64px;text-align:center;padding:7px}
+.fxbar{border:1px solid var(--accent);border-radius:12px;background:color-mix(in srgb,var(--accent-weak) 45%,var(--surface));padding:12px 14px;margin-bottom:12px}
+.fx-row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px}
+.fx-tag{align-self:center;font-family:var(--mono);font-weight:700;font-size:12px;color:#fff;background:var(--accent);padding:4px 9px;border-radius:6px}
+.fx-f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fx-f>span{font-size:11.5px;font-weight:600;color:var(--muted)}
+.fx-f select,.fx-f input{width:auto;padding:7px 9px;font-size:13px}
+.fx-grow{flex:1 1 180px}.fx-grow input,.fx-grow select{width:100%}
+.fx-num input{width:60px;text-align:center}
+#fxList{margin-top:10px;min-height:80px}
+.fx-foot{margin-top:10px;align-items:center;font-size:12.5px}
+.fx-chk{display:flex;align-items:center;gap:5px;cursor:pointer}
+.fx-prev code,.fx-help code{font-family:var(--mono);font-size:11.5px;background:var(--surface);border:1px solid var(--border);padding:1px 5px;border-radius:4px}
+.fx-help{margin-top:8px;font-size:12px;color:var(--muted)}
 @media (max-width:900px){
   .qform{grid-template-columns:1fr 1fr}
   .bgrid2{grid-template-columns:1fr}
@@ -376,7 +389,7 @@ table.xgrid tr:hover td{background:color-mix(in srgb,var(--accent-weak) 30%,tran
     <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:12px">
       <div>
         <h2><span class="step-n">2</span>바꿀 칸만 수정</h2>
-        <p class="sub" style="margin:0">칸을 눌러 바로 고치세요. 엑셀에서 여러 칸을 복사해 붙여넣어도 됩니다.</p>
+        <p class="sub" style="margin:0">fx 함수로 열 전체를 한 번에 바꾸거나, 칸을 눌러 직접 고치세요. 행을 체크하면 그 행에만 적용됩니다.</p>
       </div>
       <div class="summary" id="bSummary"></div>
     </div>
@@ -386,6 +399,51 @@ table.xgrid tr:hover td{background:color-mix(in srgb,var(--accent-weak) 30%,tran
       <button class="btn sm" id="bClear">전체 비우기</button>
       <span style="flex:1"></span>
       <label class="hint" style="margin:0;display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="bShowExt"> 키워드·ID 열 보기</label>
+    </div>
+    <div class="fxbar" id="fxBar">
+      <div class="fx-row">
+        <span class="fx-tag">fx 함수</span>
+        <label class="fx-f"><span>열</span>
+          <select id="fxCol">
+            <option value="utm_content">콘텐츠</option>
+            <option value="utm_campaign">캠페인 이름</option>
+            <option value="base">랜딩 URL</option>
+            <option value="utm_term">utm_term</option>
+            <option value="utm_id">utm_id</option>
+            <option value="mk">매체</option>
+          </select>
+        </label>
+        <label class="fx-f"><span>함수</span>
+          <select id="fxFn">
+            <option value="seqfill">순번으로 채우기 (banner_01, 02…)</option>
+            <option value="seqadd">기존 값 뒤에 순번 붙이기</option>
+            <option value="fill">같은 값으로 채우기</option>
+            <option value="prefix">앞에 붙이기</option>
+            <option value="suffix">뒤에 붙이기</option>
+            <option value="replace">찾아 바꾸기</option>
+            <option value="list">목록 붙여넣기 (한 줄 = 한 행)</option>
+            <option value="filldown">빈 칸을 위 값으로 채우기</option>
+            <option value="formula">수식 직접 입력</option>
+          </select>
+        </label>
+        <label class="fx-f fx-grow" id="fxVal1Wrap"><span id="fxVal1Lbl">값</span><input type="text" id="fxVal1"></label>
+        <label class="fx-f" id="fxVal2Wrap"><span>바꿀 값</span><input type="text" id="fxVal2" placeholder="(비우면 삭제)"></label>
+        <label class="fx-f fx-grow" id="fxMediaWrap" style="display:none"><span>매체</span><select id="fxMedia"></select></label>
+        <label class="fx-f fx-num" id="fxStartWrap"><span>시작</span><input type="text" id="fxStart" value="1" inputmode="numeric"></label>
+        <label class="fx-f fx-num" id="fxPadWrap"><span>자릿수</span>
+          <select id="fxPad"><option value="1">1</option><option value="2" selected>01</option><option value="3">001</option></select>
+        </label>
+      </div>
+      <textarea id="fxList" style="display:none" placeholder="엑셀 열을 복사해 붙여넣거나 한 줄에 하나씩 입력&#10;banner_a&#10;banner_b&#10;video_15s"></textarea>
+      <div class="fx-row fx-foot">
+        <span class="fx-target" id="fxTarget">대상: 전체 0행</span>
+        <label class="fx-chk"><input type="checkbox" id="fxOnlyEmpty"> 빈 칸에만</label>
+        <span class="fx-prev" id="fxPrev"></span>
+        <span style="flex:1"></span>
+        <button class="btn sm" id="fxUndo" disabled>↶ 되돌리기</button>
+        <button class="btn sm primary" id="fxApply">적용</button>
+      </div>
+      <div class="fx-help" id="fxHelp"></div>
     </div>
     <div class="grid-wrap">
       <table class="xgrid" id="bTable">
@@ -1135,6 +1193,108 @@ $('#bDupSel').addEventListener('click', ()=>{
 $('#bDelSel').addEventListener('click', ()=>{ if(!confirm(`선택한 ${bSel.size}개 행을 표에서 지울까요?`)) return; bulk.rows=bulk.rows.filter(r=>!bSel.has(r.rid)); bSel.clear(); saveDraft(); renderGrid(); });
 $('#bClear').addEventListener('click', ()=>{ if(!bulk.rows.length) return; if(!confirm('표의 모든 행을 지울까요? (이미 저장한 목록은 그대로입니다)')) return; bulk.rows=[]; bSel.clear(); saveDraft(); renderGrid(); });
 $('#bShowExt').addEventListener('change', e=>{ bulk.showExt=e.target.checked; saveDraft(); renderGrid(); });
+
+/* ---- fx functions ---- */
+const FX={
+  seqfill:{l1:'접두어 (앞에 올 글자)', ph:'banner_', seq:1, help:'선택한 행을 위에서부터 <code>접두어+순번</code>으로 채웁니다. 예: banner_ → banner_01, banner_02 …'},
+  seqadd:{l1:'구분자', ph:'_', def:'_', seq:1, help:'기존 값 뒤에 <code>구분자+순번</code>을 붙입니다. 예: banner_a → banner_a_01, banner_a_02 …'},
+  fill:{l1:'채울 값', ph:'banner_main', help:'대상 행을 모두 같은 값으로 채웁니다. 매체 열은 드롭다운에서 고릅니다.'},
+  prefix:{l1:'앞에 붙일 값', ph:'fw_', help:'기존 값 앞에 글자를 붙입니다. 예: banner_a → fw_banner_a'},
+  suffix:{l1:'뒤에 붙일 값', ph:'_1200x628', help:'기존 값 뒤에 글자를 붙입니다. 예: banner_a → banner_a_1200x628'},
+  replace:{l1:'찾을 값', ph:'banner', two:1, help:'대상 행에서 찾을 값을 모두 바꿉니다. 바꿀 값을 비우면 해당 글자를 지웁니다.'},
+  list:{list:1, help:'붙여넣은 목록을 대상 행에 위에서부터 한 줄씩 넣습니다. 목록이 행보다 많으면 남는 줄은 새 행으로 추가됩니다.'},
+  filldown:{none:1, help:'비어 있는 칸을 바로 위 행의 값으로 채웁니다. (엑셀의 아래로 채우기)'},
+  formula:{l1:'수식', ph:'{캠페인}_{값}_{n}', seq:1, help:'사용 가능: <code>{값}</code> 현재 칸 값 · <code>{n}</code> 순번 · <code>{행}</code> 표의 행 번호 · <code>{캠페인}</code> <code>{콘텐츠}</code> <code>{키워드}</code> <code>{source}</code> <code>{medium}</code> <code>{오늘}</code>(yymmdd)'}
+};
+let undoStack=[];
+function snapshot(){ undoStack.push(JSON.stringify(bulk.rows)); if(undoStack.length>30) undoStack.shift(); $('#fxUndo').disabled=false; }
+$('#fxUndo').addEventListener('click', ()=>{
+  if(!undoStack.length) return; bulk.rows=JSON.parse(undoStack.pop()); $('#fxUndo').disabled=!undoStack.length;
+  saveDraft(); renderGrid(); toast('직전 작업을 되돌렸습니다');
+});
+const fxRows=()=>bSel.size?bulk.rows.filter(r=>bSel.has(r.rid)):bulk.rows;
+const getCell=(r,k)=>k==='mk'?mkey(r.s,r.m,r.p):(r[k]||'');
+function fxUi(){
+  const col=$('#fxCol').value, isM=col==='mk';
+  [...$('#fxFn').options].forEach(o=>o.disabled=isM&&o.value!=='fill');
+  if(isM) $('#fxFn').value='fill';
+  const fn=$('#fxFn').value, d=FX[fn];
+  $('#fxVal1Wrap').style.display=(d.none||d.list||isM)?'none':'';
+  $('#fxVal1Lbl').textContent=d.l1||'값'; $('#fxVal1').placeholder=d.ph||'';
+  if(d.def!==undefined && fxUi.lastFn!==fn) $('#fxVal1').value=d.def;
+  if(fxUi.lastFn && fxUi.lastFn!==fn && FX[fxUi.lastFn].def!==undefined && d.def===undefined) $('#fxVal1').value='';
+  fxUi.lastFn=fn;
+  $('#fxVal2Wrap').style.display=d.two?'':'none';
+  $('#fxMediaWrap').style.display=isM?'':'none';
+  if(isM) $('#fxMedia').innerHTML=optHtml(mediaOptions(), $('#fxMedia').value);
+  $('#fxStartWrap').style.display=$('#fxPadWrap').style.display=d.seq?'':'none';
+  $('#fxList').style.display=d.list?'block':'none';
+  $('#fxOnlyEmpty').parentElement.style.display=d.none?'none':'';
+  $('#fxHelp').innerHTML=d.help;
+  fxPreview();
+}
+function fxCompute(){
+  const col=$('#fxCol').value, fn=$('#fxFn').value, v1=$('#fxVal1').value, v2=$('#fxVal2').value;
+  const st=parseInt($('#fxStart').value,10); const start=isNaN(st)?1:st; const pad=+$('#fxPad').value;
+  const onlyEmpty=$('#fxOnlyEmpty').checked && $('#fxOnlyEmpty').parentElement.style.display!=='none';
+  const rows=fxRows(); const out=[]; let seq=0;
+  const d=new Date(); const today=String(d.getFullYear()).slice(2)+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+  const listVals=fn==='list'?$('#fxList').value.replace(/[\r\n]+$/,'').split(/\r?\n/).map(s=>s.trim()):[];
+  if(fn==='filldown'){
+    let prev=null;
+    bulk.rows.forEach(r=>{ const cur=getCell(r,col); const inT=!bSel.size||bSel.has(r.rid);
+      if(inT && !cur.trim() && prev!==null) out.push([r,prev]); if(cur.trim()) prev=cur; });
+    return out;
+  }
+  let li=0;
+  rows.forEach(r=>{
+    const cur=getCell(r,col);
+    if(onlyEmpty && cur.trim()) return;
+    const n=String(start+seq).padStart(pad,'0'); let nv;
+    switch(fn){
+      case 'seqfill': nv=v1+n; break;
+      case 'seqadd': nv=cur?cur+v1+n:n; break;
+      case 'fill': nv=col==='mk'?$('#fxMedia').value:v1; break;
+      case 'prefix': nv=v1+cur; break;
+      case 'suffix': nv=cur+v1; break;
+      case 'replace': nv=v1?cur.split(v1).join(v2):cur; break;
+      case 'list': if(li>=listVals.length) return; nv=listVals[li++]; break;
+      case 'formula': nv=v1.replace(/\{([^}]+)\}/g,(m,t)=>({'값':cur,'n':n,'행':String(bulk.rows.indexOf(r)+1),'캠페인':r.utm_campaign||'','콘텐츠':r.utm_content||'','키워드':r.utm_term||'','source':r.s||'','medium':r.m||'','오늘':today}[t]??m)); break;
+    }
+    seq++;
+    if(nv!==cur) out.push([r,nv]);
+  });
+  if(fn==='list' && li<listVals.length) out.extra=listVals.slice(li);
+  return out;
+}
+function fxPreview(){
+  const rows=fxRows(); const col=$('#fxCol').value;
+  $('#fxTarget').innerHTML=bSel.size?`대상: <b>선택한 ${bSel.size}행</b>`:`대상: <b>전체 ${bulk.rows.length}행</b> <span class="hint">(체크박스로 행을 고르면 그 행에만 적용)</span>`;
+  if(!bulk.rows.length){ $('#fxPrev').textContent=''; $('#fxApply').disabled=true; return; }
+  const ch=fxCompute(); const extra=(ch.extra||[]).length;
+  $('#fxApply').disabled=!ch.length&&!extra;
+  $('#fxApply').textContent=ch.length||extra?`적용 (${ch.length+extra}칸)`:'적용';
+  const lbl=v=>col==='mk'?(mediaOptions().find(o=>o.k===v)||{label:v}).label:v;
+  $('#fxPrev').innerHTML = ch.length||extra ? '미리보기: '+ch.slice(0,2).map(([r,nv])=>`<code>${esc(lbl(getCell(r,col))||'(빈 칸)')}</code> → <code>${esc(lbl(nv)||'(빈 칸)')}</code>`).join(' , ')+(ch.length>2?` 외 ${ch.length-2}칸`:'')+(extra?` + 새 행 ${extra}개`:'') : '<span class="hint">바뀌는 칸이 없습니다</span>';
+}
+$('#fxApply').addEventListener('click', ()=>{
+  const col=$('#fxCol').value; const ch=fxCompute(); const extra=ch.extra||[];
+  if(!ch.length&&!extra.length) return;
+  snapshot();
+  ch.forEach(([r,nv])=>{ if(col==='mk') Object.assign(r,splitKey(nv)); else r[col]=nv; if(r.id) r.dirty=true; });
+  if(extra.length){ const tpl=bulk.rows[bulk.rows.length-1]; extra.forEach(v=>{ const nr=cloneRow(tpl); nr[col]=v; bulk.rows.push(nr); }); }
+  saveDraft(); renderGrid(); toast(`${ch.length}칸 변경${extra.length?`, 새 행 ${extra.length}개 추가`:''} — 되돌리기 가능`);
+});
+['fxCol','fxFn'].forEach(id=>$('#'+id).addEventListener('change', fxUi));
+['fxVal1','fxVal2','fxStart','fxPad','fxList','fxMedia','fxOnlyEmpty'].forEach(id=>{ $('#'+id).addEventListener('input', fxPreview); $('#'+id).addEventListener('change', fxPreview); });
+$('#fxVal1').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); $('#fxApply').click(); } });
+// keep preview in sync with grid edits / selection
+const _refresh=refreshComputed; refreshComputed=function(){ _refresh(); fxPreview(); };
+const _sel=updateBSel; updateBSel=function(){ _sel(); if($('#fxCol')) fxPreview(); };
+// snapshot before destructive table actions
+['bDelSel','bClear','bDupSel'].forEach(id=>$('#'+id).addEventListener('click', ()=>snapshot(), true));
+$('#bTbody').addEventListener('click', e=>{ const a=e.target.dataset.act; if(a==='dup'||a==='del') snapshot(); }, true);
+fxUi();
 
 /* ---- save / export ---- */
 function validRows(){ return bulk.rows.map(r=>({r,c:computed.get(r.rid)})).filter(x=>x.c&&x.c.final&&!x.c.dup); }
