@@ -355,7 +355,7 @@ footer{max-width:1280px;margin:0 auto;padding:0 16px 30px;color:var(--sub);font-
   <div class="bgrid" id="mgrGrid"></div>
   <div class="mgr-note">브랜드는 이 브라우저에만 저장돼요. 다른 PC·팀원과 쓰려면 <b>내보내기</b>로 받은 JSON 파일을 상대 브라우저에서 <b>가져오기</b> 하세요 (같은 이름은 덮어쓰기 전에 확인해요).</div>
 </section>
-<footer>입력값과 저장한 브랜드는 이 브라우저에만 보관돼요. 생성된 카피는 초안이므로 광고 심의 기준(최상급·효능 표현 등)을 꼭 확인한 뒤 사용하세요.</footer>
+<footer>입력값은 페이지에 들어올 때마다 비워져요. 저장한 브랜드는 이 브라우저에 보관되며 '브랜드 관리'에서 불러올 수 있어요. 생성된 카피는 초안이므로 광고 심의 기준(최상급·효능 표현 등)을 꼭 확인한 뒤 사용하세요.</footer>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -424,7 +424,7 @@ function renderDemo(){
 }
 document.querySelectorAll('#gender button').forEach(b=>b.onclick=()=>{demo.g=b.dataset.v;renderDemo();saveDraft()});
 document.querySelectorAll('#ages button').forEach(b=>b.onclick=()=>{const v=b.dataset.v;demo.ages=demo.ages.includes(v)?demo.ages.filter(x=>x!==v):[...demo.ages,v];renderDemo();saveDraft()});
-function saveDraft(){LS.set('ccs_draft',getForm());markDirty()}
+function saveDraft(){markDirty()}
 
 function getForm(){
   return {brand:$('#brand').value.trim(),category:$('#category').value.trim(),tone:tone,about:$('#about').value.trim(),rules:$('#rules').value.trim(),
@@ -475,7 +475,7 @@ function saveBrand(asNew){
 }
 $('#saveBrand').onclick=()=>saveBrand();$('#saveAsNew').onclick=()=>saveBrand(true);
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='s'&&!$('#viewStudio').hidden){e.preventDefault();saveBrand()}});
-function saveDraftOnly(){LS.set('ccs_draft',getForm())}
+function saveDraftOnly(){}
 document.addEventListener('input',e=>{if(e.target.closest('#viewStudio main section:first-child'))saveDraft()});
 
 /* views */
@@ -784,7 +784,8 @@ $('#sample').onclick=()=>{setForm({brand:'순면하루',category:'생리대',ton
   usps:[{k:'유기농 순면 커버',t:'100% 유기농 순면 커버로 피부 자극 최소화'},{k:'향료·표백 제로',t:'향료·염소표백 없는 설계'}],demo:{g:'여성',ages:['20','30']},target:'민감한 피부의 직장인',
   pps:[{k:'피부 트러블',t:'오래 착용하면 생기는 피부 트러블',u:0},{k:'냄새 걱정',t:'하루 종일 신경 쓰이는 냄새',u:1}]});setEditing('');refreshBrands('');resetOut();saveDraftOnly();toast('예시를 채웠어요')};
 
-setMode(mode);setForm(LS.get('ccs_draft',{}));if(editing&&!getBrands()[editing])editing='';refreshBrands(editing);dirty=false;renderEditing();showView(LS.get('ccs_view','studio'));
+/* 처음 들어오면 입력값은 항상 빈 상태로 시작 (저장된 브랜드는 유지) */
+setMode(mode);setForm({});editing='';LS.set('ccs_editing','');try{localStorage.removeItem('ccs_draft')}catch(e){}refreshBrands('');dirty=false;renderEditing();showView('studio');
 })();
 </script>
 </body>
