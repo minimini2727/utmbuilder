@@ -30,9 +30,6 @@ header.top{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1
 .logo{font-weight:800;font-size:18px;letter-spacing:-.02em}
 .logo span{color:var(--accent)}
 .top-sp{flex:1}
-.mode{display:flex;background:var(--chip);border-radius:10px;padding:3px}
-.mode button{border:0;background:transparent;color:var(--sub);font:inherit;font-size:13px;font-weight:600;padding:6px 12px;border-radius:8px;cursor:pointer}
-.mode button.on{background:var(--panel);color:var(--ink);box-shadow:var(--shadow)}
 main{max-width:1280px;margin:0 auto;padding:20px 16px 60px;display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:20px;align-items:start}
 @media (max-width:900px){main{grid-template-columns:1fr}}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow)}
@@ -208,10 +205,6 @@ footer{max-width:1280px;margin:0 auto;padding:0 16px 30px;color:var(--sub);font-
       <button id="tabBrands">브랜드 관리 <span class="cnt" id="brandCnt">0</span></button>
     </nav>
     <div class="top-sp"></div>
-    <div class="mode" role="tablist">
-      <button id="mRule" class="on">기본 엔진</button>
-      <button id="mAI">AI 모드 (Claude)</button>
-    </div>
   </div>
 </header>
 
@@ -278,21 +271,6 @@ footer{max-width:1280px;margin:0 auto;padding:0 16px 30px;color:var(--sub);font-
     <button class="add" data-add="pp">+ Pain Point 추가</button>
     <div class="hint">P.P마다 해결해 줄 USP를 고르면 [USP 번호]-[P.P 번호]로 짝지어져요 (예: 1-1, 2-2). VP는 이 매칭 쌍마다 1개씩 만들어져요.</div>
 
-    <div id="aiSet" hidden>
-      <div class="aibox">
-        AI 모드는 내 Claude API 키로 브라우저에서 직접 호출해요. 키는 이 브라우저(localStorage)에만 저장되고 서버로 보내지지 않아요. 공용 PC에서는 사용 후 키를 지워주세요.
-      </div>
-      <div class="row">
-        <div><label class="f">Claude API 키</label><input type="password" id="apiKey" placeholder="sk-ant-..."></div>
-        <div><label class="f">모델</label>
-          <select id="model">
-            <option value="claude-sonnet-5-5">Sonnet 5.5 (권장)</option>
-            <option value="claude-opus-5-5">Opus 5.5 (고품질)</option>
-            <option value="claude-haiku-5-5">Haiku 5.5 (빠름)</option>
-          </select>
-        </div>
-      </div>
-    </div>
 
     <div class="bar">
       <button class="btn wide" id="genVP">VP 자동 생성</button>
@@ -306,7 +284,7 @@ footer{max-width:1280px;margin:0 auto;padding:0 16px 30px;color:var(--sub);font-
       <summary>작성 가이드 — VP는 이렇게 만들어져요</summary>
       <ul>
         <li>VP(Value Proposition) = 타겟의 Pain Point를 브랜드 USP로 해결해 주는 약속</li>
-        <li>VP는 단어를 이어 붙이지 않고, 해결된 상태를 부를 수 있는 컨셉 이름으로 만들어요 (예: 새벽배송 + 늦은 택배 불편함 = 슈팅배송)</li>
+        <li>VP는 단어를 이어 붙이지 않고, 실제 서비스·기능명으로 쓸 수 있는 이름으로 만들어요 (예: 새벽배송 + 늦은 택배 불편함 = 슈팅배송)</li><li>유아적·억지스러운 표현, 근거 없는 수치·최상급은 쓰지 않아요</li>
         <li>P.P마다 매칭한 USP와 짝지어(1-1, 2-2 …) 쌍마다 VP를 1개씩 만들고, 1개를 골라 컨셉 카피 10개로 확장</li>
         <li>카피는 메인 15자·서브 20자 이내를 목표로(내부 권장값) 소구 각도를 모두 다르게 구성해 A/B 테스트에 바로 쓰기 좋게 했어요</li>
         <li>카드의 메인/서브 카피는 클릭해서 바로 수정할 수 있어요</li>
@@ -369,7 +347,6 @@ const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('on');clearT
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const MAIN_MAX=15, SUB_MAX=20;
 
-let mode=LS.get('ccs_mode','rule');
 let vps=[]; let sel=0; let copies=[]; let pairSeed={}; let pairHist={}; let pairRound={};
 
 const tag=x=>'#'+String(x).replace(/[\s·,./]+/g,'');
@@ -542,11 +519,6 @@ $('#mgrFile').onchange=async e=>{
   }catch(x){toast('가져올 수 없는 파일이에요 (내보내기한 JSON만 가능)')}
 };
 
-/* ---------- mode ---------- */
-function setMode(m){mode=m;LS.set('ccs_mode',m);$('#mRule').classList.toggle('on',m==='rule');$('#mAI').classList.toggle('on',m==='ai');$('#aiSet').hidden=m!=='ai'}
-$('#mRule').onclick=()=>setMode('rule');$('#mAI').onclick=()=>setMode('ai');
-$('#apiKey').value=LS.get('ccs_key','');$('#apiKey').oninput=e=>LS.set('ccs_key',e.target.value.trim());
-$('#model').value=LS.get('ccs_model','claude-sonnet-5-5');$('#model').onchange=e=>LS.set('ccs_model',e.target.value);
 
 /* ---------- Korean josa ---------- */
 function hasBatchim(w){
@@ -563,26 +535,27 @@ const J={
 };
 
 /* ---------- rule engine ---------- */
-/* 컨셉 사전: P.P에서 문제 유형을 읽고, 해결된 상태를 '이름'으로 만든다 */
+/* VP 컨셉 사전 — 가이드: USP + P.P를 결합해 '부를 수 있는' 서비스·기능명으로 (예: 새벽배송 + 늦은 택배 = 슈팅배송)
+   원칙: 유아적·의성어·말장난·억지 은유 금지, 근거 없는 수치·최상급 금지, 실제 서비스/기능명으로 쓸 수 있는 품질만 */
+const SYS_P=['설계','케어','솔루션','시스템','라인','시그니처'], SYS_S=['서비스','시스템','솔루션','프로그램','플랜','패스'], SYS_ST=['솔루션','컬렉션','라인','에디션','가이드','시그니처'];
 const THEMES=[
- {id:'speed',label:'속도',re:/늦|느리|지연|기다|오래 걸리|배송|택배|도착|대기|속도/g,words:['번개','총알','직진','순삭','쾌속','광속','스피드','원데이','즉시'],phrases:['기다림 제로','눈뜨면 도착','바로 도착','기다림 삭제','문 앞 직행','시간 단축']},
- {id:'gentle',label:'저자극',re:/트러블|자극|가려|따가|민감|뒤집|발진|붉|건조|각질|피부/g,neg:1,words:['순둥','솜결','보들','베이비','무자극','포근','말랑'],phrases:['피부 휴가','피부 쉼표','순둥 모드','피부 숨 쉬는 날','맨살 같은 하루','자극 휴무일']},
- {id:'fresh',label:'청결',re:/냄새|악취|향|비린|찝찝|위생|세균|오염/g,neg:1,words:['뽀송','산뜻','클린','상쾌','청량','샤워'],phrases:['냄새 OFF','뽀송 리셋','클린 타임','하루 종일 샤워 직후','냄새 휴무','산뜻 루틴']},
- {id:'breath',label:'통기',re:/답답|덥|더워|땀|습|꿉꿉|통풍|열감|갑갑/g,words:['숨쉬는','에어','쿨링','바람결','통풍','시원'],phrases:['숨 쉬는 하루','바람 모드','에어 타임','땀 휴무','속까지 바람','쿨 루틴']},
- {id:'value',label:'가성비',re:/비싸|가격|비용|부담|돈|요금|가성비|할인/g,words:['착한','알뜰','합리','부담제로','가벼운값','현명'],phrases:['지갑 해방','부담 OFF','착한 선택','현명한 장바구니','지갑이 웃는 날','가격 다이어트']},
- {id:'easy',label:'간편',re:/복잡|어렵|귀찮|번거|헷갈|손이 많|설치|준비/g,words:['원터치','한방','올인원','원클릭','간편','툭'],phrases:['한 번에 끝','손 안 가는 하루','원터치 완성','툭 하면 끝','귀찮음 삭제','쉬운 루틴']},
- {id:'safe',label:'안심',re:/불안|걱정|샐까|새는|샘|실패|의심|못 믿|안전|사고|유해/g,neg:1,words:['안심','철벽','든든','방패','가드'],phrases:['걱정 OFF','철벽 가드','안심 모드','걱정 휴무','마음 놓는 시간','든든 백업']},
- {id:'light',label:'가벼움',re:/무겁|부피|크기|들고 다|휴대|짐/g,words:['깃털','초경량','포켓','미니','가뿐'],phrases:['깃털 무게','주머니 쏙','가벼운 하루','짐 다이어트','가뿐 모드']},
- {id:'last',label:'지속',re:/금방|지워|빠지|무너|망가|오래 못|번짐|변색|늘어/g,neg:1,words:['종일','롱래스팅','튼튼','변함없는','오래가는'],phrases:['하루 종일 그대로','처음 그대로','변함없는 하루','아침 그대로 저녁까지','지속 모드']},
- {id:'comfort',label:'편안함',re:/피로|아프|아픈|통증|결림|저림|붓|쑤시|뻐근|불편한 착용|배기|조이/g,neg:1,words:['구름','폭신','말랑','마시멜로','쿠션감','사뿐'],phrases:['구름 위 산책','발 쉼표','폭신 모드','피로 휴무','하루가 가벼워지는 걸음','사뿐 루틴']},
- {id:'fit',label:'핏',re:/사이즈|안 맞|끼|헐렁|핏이|길이|체형/g,words:['딱핏','인생핏','맞춤','핏스','찰떡'],phrases:['내 몸에 딱','인생핏 발견','체형 맞춤','찰떡 사이즈','핏 고민 끝']},
- {id:'style',label:'스타일',re:/촌스|뻔한|코디|스타일|유행|디자인|핏|개성|옷|패션|입을/g,words:['꾸안꾸','데일리','시그니처','무드','레이어드','포인트'],phrases:['꾸안꾸 완성','오늘의 무드','데일리 시그니처','옷장 리프레시','코디 고민 삭제','한 끗 차이']},
- {id:'time',label:'시간절약',re:/바쁘|시간 없|아침|출근|짬|여유/g,words:['모닝','퀵','짬','타임세이브','퀵모닝'],phrases:['바쁜 아침 루틴','짬 내서 완성','여유 한 스푼','시간 버는 습관','출근 전 완성']}
+ {id:'speed',label:'속도',re:/늦|느리|지연|기다|오래 걸리|배송|택배|도착|대기|속도/g,mods:['퀵','익스프레스','스피드','다이렉트','논스톱','패스트','바로','빠른','신속','스마트','래피드'],cores:['빠른도착','신속배송','대기단축'],sys:SYS_S,ph:[n=>`기다림 없는 ${n}`,n=>`빠르게 받는 ${n}`,n=>`속도가 다른 ${n}`,n=>`바로 받는 ${n}`,n=>`시간을 아끼는 ${n}`,n=>`기다리지 않는 쇼핑`,n=>`빠른 도착`,n=>`더 빠른 일상`,n=>`지체 없는 ${n}`,n=>`오늘의 속도`,n=>`주문이 즐거운 ${n}`]},
+ {id:'gentle',label:'저자극',re:/트러블|자극|가려|따가|민감|뒤집|발진|붉|건조|각질|피부/g,mods:['클린','퓨어','젠틀','소프트','마일드','센서티브','내추럴','카밍','세이프','케어','릴리프'],cores:['저자극','피부안심','민감피부'],sys:SYS_P,ph:[n=>`피부가 편안한 ${n}`,n=>`자극을 줄인 ${n}`,n=>`민감 피부를 위한 ${n}`,n=>`피부를 생각한 ${n}`,n=>`하루 종일 편안함`,n=>`매일 안심`,n=>`피부 편안 루틴`,n=>`편안함의 기준`,n=>`피부가 먼저인 ${n}`,n=>`순한 하루`,n=>`피부 걱정 줄인 ${n}`]},
+ {id:'fresh',label:'청결',re:/냄새|악취|향|비린|찝찝|위생|세균|오염/g,mods:['클린','프레시','퓨어','데오','산뜻','청결','에어','리프레시','쾌적','위생','데일리'],cores:['청결','쾌적','위생'],sys:SYS_P,ph:[n=>`하루 종일 산뜻`,n=>`냄새 걱정 줄인 ${n}`,n=>`산뜻한 ${n}`,n=>`깨끗한 하루`,n=>`청결한 일상`,n=>`쾌적함의 기준`,n=>`매일 산뜻`,n=>`끝까지 쾌적`,n=>`산뜻 루틴`,n=>`청결을 지키는 ${n}`,n=>`깨끗함이 오래가는 ${n}`]},
+ {id:'breath',label:'통기',re:/답답|덥|더워|땀|습|꿉꿉|통풍|열감|갑갑/g,mods:['에어','쿨','브리즈','쿨링','통기','메쉬','드라이','라이트','쾌적','프레시','윈드'],cores:['통기','쾌적','쿨링'],sys:SYS_P,ph:[n=>`숨 쉬는 ${n}`,n=>`통기성 높인 ${n}`,n=>`하루 종일 쾌적`,n=>`답답함 덜어낸 ${n}`,n=>`바람이 통하는 ${n}`,n=>`쾌적한 하루`,n=>`시원한 일상`,n=>`매일 쾌적`,n=>`쾌적함의 기준`,n=>`가볍게 숨 쉬는 하루`,n=>`땀 걱정 줄인 ${n}`]},
+ {id:'value',label:'가성비',re:/비싸|가격|비용|부담|돈|요금|가성비|할인/g,mods:['실속','밸류','세이브','알뜰','합리','착한','이코노','스마트','베이직','플러스','굿딜'],cores:['합리가격','알뜰구매','가성비'],sys:SYS_S,ph:[n=>`부담 없는 ${n}`,n=>`합리적인 ${n}`,n=>`가격 부담 줄인 ${n}`,n=>`현명한 선택`,n=>`실속 있는 ${n}`,n=>`가치 있는 소비`,n=>`알뜰한 일상`,n=>`부담 없는 혜택`,n=>`똑똑한 소비`,n=>`가격 대비 만족`,n=>`쓸수록 이득인 ${n}`]},
+ {id:'easy',label:'간편',re:/복잡|어렵|귀찮|번거|헷갈|손이 많|설치|준비/g,mods:['원스텝','원터치','올인원','이지','심플','간편','원클릭','스마트','오토','퀵','핸디'],cores:['간편','원스텝','올인원'],sys:SYS_S,ph:[n=>`한 번에 끝나는 ${n}`,n=>`쉬운 ${n}`,n=>`손이 덜 가는 ${n}`,n=>`간편한 일상`,n=>`복잡함 없는 ${n}`,n=>`쉽게 시작하는 ${n}`,n=>`번거로움 덜어낸 하루`,n=>`간단한 루틴`,n=>`누구나 쉬운 ${n}`,n=>`한 단계로 끝`,n=>`설명서 없이 쓰는 ${n}`]},
+ {id:'safe',label:'안심',re:/불안|걱정|샐까|새는|샘|실패|의심|못 믿|안전|사고|유해/g,mods:['안심','세이프','가드','실드','프로텍트','든든','더블','시큐어','트러스트','케어','안전'],cores:['안심','안전','보호'],sys:SYS_P,ph:[n=>`믿고 쓰는 ${n}`,n=>`걱정을 덜어주는 ${n}`,n=>`하루 종일 안심`,n=>`안심하고 쓰는 ${n}`,n=>`든든한 ${n}`,n=>`매일 안심`,n=>`끝까지 안심`,n=>`안심의 기준`,n=>`마음 놓이는 하루`,n=>`믿을 수 있는 ${n}`,n=>`걱정 없는 외출`]},
+ {id:'light',label:'가벼움',re:/무겁|부피|크기|들고 다|휴대|짐/g,mods:['라이트','에어','슬림','미니','포켓','경량','초경량','페더','컴팩트','모바일','심플'],cores:['경량','휴대','슬림'],sys:SYS_P,ph:[n=>`가벼운 ${n}`,n=>`부담 없이 드는 ${n}`,n=>`가볍게 챙기는 ${n}`,n=>`휴대가 편한 ${n}`,n=>`가벼운 일상`,n=>`가벼움의 기준`,n=>`어디든 가볍게`,n=>`들고 다니기 좋은 ${n}`,n=>`무게를 줄인 ${n}`,n=>`가볍게 떠나는 하루`,n=>`짐이 줄어드는 ${n}`]},
+ {id:'last',label:'지속',re:/금방|지워|빠지|무너|망가|오래 못|번짐|변색|늘어/g,mods:['롱','롱래스팅','올데이','데일리','튼튼','지속','스테이','에버','킵','오래가는','올타임'],cores:['지속','롱래스팅','내구'],sys:SYS_P,ph:[n=>`오래가는 ${n}`,n=>`하루 종일 그대로`,n=>`처음 그대로`,n=>`변함없는 ${n}`,n=>`지속력 높인 ${n}`,n=>`오래 쓰는 ${n}`,n=>`끝까지 그대로`,n=>`변함없는 하루`,n=>`지속의 기준`,n=>`매일 그대로`,n=>`시간이 지나도 그대로`]},
+ {id:'comfort',label:'편안함',re:/피로|아프|아픈|통증|결림|저림|붓|쑤시|뻐근|배기|조이/g,mods:['컴포트','소프트','쿠션','릴렉스','밸런스','편안','이지','라이트','플렉스','웰','쿠셔닝','서포트'],cores:['편안','쿠셔닝','착용감'],sys:SYS_P,ph:[n=>`편안한 ${n}`,n=>`피로를 덜어주는 ${n}`,n=>`오래 써도 편안한 ${n}`,n=>`하루 종일 편안함`,n=>`편안함의 기준`,n=>`부담 줄인 ${n}`,n=>`편안한 걸음`,n=>`가벼운 발걸음`,n=>`매일 편안`,n=>`쉬어가는 하루`,n=>`몸이 먼저 아는 ${n}`]},
+ {id:'fit',label:'핏',re:/사이즈|안 맞|끼|헐렁|핏이|길이|체형/g,mods:['맞춤','커스텀','바디','스마트','테일러','이지','슬림','릴렉스','트루','밸런스','퍼스널'],cores:['맞춤핏','체형맞춤','사이즈'],sys:SYS_P,ph:[n=>`내 몸에 맞춘 ${n}`,n=>`체형을 생각한 ${n}`,n=>`딱 맞는 ${n}`,n=>`편하게 맞는 ${n}`,n=>`핏이 다른 ${n}`,n=>`맞춤의 기준`,n=>`나에게 맞는 핏`,n=>`사이즈 고민 줄인 ${n}`,n=>`체형별 맞춤`,n=>`편안한 핏`,n=>`입어보면 아는 ${n}`]},
+ {id:'style',label:'스타일',re:/촌스|뻔한|코디|스타일|유행|디자인|핏|개성|옷|패션|입을/g,mods:['데일리','시그니처','에센셜','모던','클래식','레이어드','포인트','무드','트렌드','스타일','베이직'],cores:['스타일링','코디','데일리룩'],sys:SYS_ST,ph:[n=>`매일 입는 ${n}`,n=>`코디가 쉬운 ${n}`,n=>`스타일이 다른 ${n}`,n=>`오늘의 스타일`,n=>`데일리 스타일`,n=>`분위기를 바꾸는 ${n}`,n=>`코디 고민 줄인 ${n}`,n=>`한 끗 다른 ${n}`,n=>`나다운 스타일`,n=>`어디에나 어울리는 ${n}`,n=>`계절을 타지 않는 ${n}`]},
+ {id:'time',label:'시간절약',re:/바쁘|시간 없|아침|출근|짬|여유/g,mods:['퀵','모닝','타임','스마트','이지','원스텝','데일리','스피드','루틴','패스트','익스프레스'],cores:['시간절약','퀵','모닝'],sys:SYS_S,ph:[n=>`시간을 아끼는 ${n}`,n=>`바쁜 아침의 ${n}`,n=>`빠르게 끝내는 ${n}`,n=>`여유를 만드는 ${n}`,n=>`짧고 확실한 루틴`,n=>`시간 절약 루틴`,n=>`바쁜 날의 해답`,n=>`출근 전 완성`,n=>`여유로운 아침`,n=>`시간을 버는 습관`,n=>`하루가 길어지는 ${n}`]},
 ];
-const DEF_THEME={id:'base',label:'맞춤',words:['딱맞춤','데일리','스마트','마이'],phrases:['나만의 루틴','딱 맞는 하루','내 편 솔루션']};
+const DEF_THEME={id:'base',label:'맞춤',mods:['스마트','데일리','에센셜','베이직','시그니처','퓨어','케어','플러스','모던','트루','뉴'],cores:['맞춤','핵심','데일리'],sys:SYS_P,ph:[n=>`나를 위한 ${n}`,n=>`매일 쓰는 ${n}`,n=>`기본에 충실한 ${n}`,n=>`믿고 쓰는 ${n}`,n=>`일상의 기준`,n=>`데일리 솔루션`,n=>`고민을 덜어주는 ${n}`,n=>`꼭 맞는 ${n}`,n=>`가치 있는 선택`,n=>`새로운 기준`,n=>`오래 함께할 ${n}`]};
 const NOUNS=['배송','커버','패드','크림','세럼','마스크','팩','원단','소재','케어','밴드','매트','가디건','니트','팬츠','셔츠','재킷','코트','백','슈즈','생리대','기저귀','렌즈','앱','상담','클래스','요금제','보험','카드','대출','도시락','밀키트','샴푸','토너','로션','쿠션','틴트','침구','이불','베개','의자','청소기','서비스'];
 const BADNOUN=/^(제로|설계|공법|기술|시스템|구조|성분|함유|무첨가|인기|퀄리티|품질|가격|최저가|프리|free)$/i;
-const GENERIC_PP=/^(불편함?|걱정|고민|스트레스|문제|불만|짜증|불안)$/;
 function themeOf(x){
   const txt=[x.p.k,x.p.t].join(' ');let best=null,score=0;
   THEMES.forEach(t=>{const n=(txt.match(t.re)||[]).length;if(n>score){score=n;best=t}});
@@ -596,17 +569,18 @@ function nounOf(u,f){
   if(last.length<=4) return last;
   return f.category||last.slice(-2);
 }
-function coreOf(p){const tk=String(p.k).split(/\s+/).filter(t=>t&&!GENERIC_PP.test(t));return (tk[tk.length-1]||'').replace(/(함|움|음)$/,m=>m)}
-const join2=(a,b)=>(a.length+b.length<=5&&!/\s/.test(a))?a+b:a+' '+b;
+const join2=(a,b)=>(a.length+b.length<=5&&a.length<=3&&!/\s/.test(a))?a+b:a+' '+b;
+const MAX_REFRESH=10;            // 다시 제안 최대 횟수 (첫 제안 + 10회 = 11세트, 세트 간 중복 없음)
+function t2List(th){const C=th.cores.length,S=th.sys.length,out=[];for(let r=0;r<C*S;r++){const k=`${th.cores[(Math.floor(r/S)+r)%C]} ${th.sys[r%S]}`;if(!out.includes(k))out.push(k)}return out}
 function conceptsFor(x,f,k){
-  const th=themeOf(x),n=nounOf(x.u,f),core=coreOf(x.p),out=[];
-  const w=i=>th.words[(k+i)%th.words.length], ph=i=>th.phrases[(k+i)%th.phrases.length];
-  out.push({tech:'조어형',kw:join2(w(0),n),meaning:`'${th.label}' 이미지를 ${n}에 붙여 ${x.p.k} 해결을 한 단어로 압축`});
-  out.push({tech:'은유형',kw:ph(0),meaning:`${J.이(x.p.k)} 사라진 상태를 은유적 장면으로 이름 붙임`});
-  const negOK=th.neg&&core&&core.length<=3;
-  if(negOK&&k%3===0) out.push({tech:'반전형',kw:'노'+core+' '+n,meaning:`불편(${core})을 지운 상태 자체를 컨셉 이름으로`});
-  else if(negOK&&k%3===1) out.push({tech:'반전형',kw:`${core} OFF`,meaning:`불편(${core})을 스위치 끄듯 없앤다는 반전 이미지`});
-  else out.push({tech:'조어형 B',kw:join2(w(2),n),meaning:`다른 '${th.label}' 어휘로 같은 해결을 변주`});
+  const th=themeOf(x),n=nounOf(x.u,f),t2=t2List(th),pp=x.p.k;
+  const ml=[...new Set([...th.mods,...DEF_THEME.mods])].filter(m=>!n.includes(m)&&!m.includes(n)&&m[0]!==n[0]&&!String(x.u.k).includes(m));
+  const mod=ml[k%ml.length],sys2=t2[k%t2.length],ph=th.ph[k%th.ph.length](n);
+  const out=[
+    {tech:'조어형',kw:join2(mod,n),meaning:`'${mod}'에 ${th.label} 가치를 담아 ${n}에 붙인 이름 — ${J.을(pp)} 해결하는 ${n}을 한 단어로`},
+    {tech:'기능형',kw:sys2,meaning:`${pp} 해결 방식을 '${sys2.split(' ').pop()}'로 체계화한 기능 컨셉`},
+    {tech:'약속형',kw:ph,meaning:`${J.이(pp)} 해결된 상태를 고객이 얻는 약속으로 표현`}
+  ];
   const seen=new Set();return out.filter(o=>!seen.has(o.kw)&&seen.add(o.kw)).map(o=>({...o,theme:th.label}));
 }
 function pairs(f){
@@ -626,7 +600,7 @@ const TONES={
  '친근':{desc:'말 걸듯 편안한 대화체',ex:'피부 트러블, 나만 그래?',ai:'친구에게 말 걸듯 편안한 해요체·반말 혼용, 가벼운 구어체',t:[
   x=>[`아직도 ${x.pp}?`,`${J.로(x.usp)} 바꿔보세요`], x=>[`${x.pp}, 나만 그래?`,`${J.로(x.b)} 해결했어요`], x=>[`${x.pp} 끝!`,`답은 ${x.kw}`],
   x=>[`혹시 ${x.pp}?`,`${x.usp} 써보셨나요?`], x=>[`${x.pp}, 이제 안녕`,`${x.b}의 ${x.kw}`], x=>[`${x.pp}, 또 참아요?`,`오늘부터 ${J.로(x.b)}`],
-  x=>[`${x.tk}의 선택`,`${x.usp}, ${x.b}`], x=>[`${J.을(x.b)} 고르는 이유`,`${x.usp}, 그래서 ${x.kw}`], x=>[`이게 바로 ${x.kw}`,`${x.b}의 ${x.usp}`], x=>[`매일이 ${x.kw}`,`${J.이(x.b)} 지킬게요`]]},
+  x=>[`${x.tk}의 선택`,`${x.usp}, ${x.b}`], x=>[`${J.을(x.b)} 고르는 이유`,`${x.usp}, 그래서 ${x.kw}`], x=>[`이게 바로 ${x.kw}`,`${x.b}의 ${x.usp}`], x=>[`오늘부터, ${x.kw}`,`${J.이(x.b)} 지킬게요`]]},
  '신뢰':{desc:'전문적이고 믿음직한 합니다체',ex:'피부 트러블, 원인부터',ai:'전문가가 설명하듯 차분한 합니다체, 근거·설계·기준 같은 신뢰 어휘',t:[
   x=>[`${x.pp}, 원인부터`,`${J.로(x.usp)} 설계했습니다`], x=>[`${x.pp}, 모두의 고민`,`${J.이(x.b)} 답을 찾았습니다`], x=>[`해답은 ${x.kw}`,`${x.pp}엔 ${x.usp}`],
   x=>[`${x.pp} 줄이는 법?`,`${x.b}의 ${x.kw}`], x=>[`${x.pp} → ${x.kw}`,`${x.usp}의 차이`], x=>[`${x.pp}, 방치 금지`,`${J.로(x.usp)} 관리하세요`],
@@ -652,98 +626,31 @@ let tone='친근';
 function renderTones(){
   $('#tones').innerHTML=Object.entries(TONES).map(([k,t])=>`<button data-t="${k}" class="${k===tone?'on':''}"><b>${k}</b><small>${t.desc}</small><i>${esc(t.ex)}</i></button>`).join('');
   document.querySelectorAll('#tones button').forEach(b=>b.onclick=()=>{tone=b.dataset.t;renderTones();saveDraft();
-    if(copies.length&&mode==='rule'){copies=ruleCopies(vps[sel],getForm());renderCopies();toast(`'${tone}' 톤으로 다시 뽑았어요`)}
-    else if(copies.length) toast("AI 모드는 '다시 뽑기'를 눌러 적용하세요");});
+    if(copies.length){copies=ruleCopies(vps[sel],getForm());renderCopies();toast(`'${tone}' 톤으로 다시 뽑았어요`)}});
 }
 function ruleCopies(v,f){
   const x={pp:v.pp,usp:v.usp,kw:v.kw,b:f.brand,tk:f.targetKw,cat:f.category};const T=TONES[f.tone]||TONES['친근'];
   return ANGLES.map(([ang,why],i)=>{const [m,s]=T.t[i](x);return {angle:ang,main:m,sub:s,why}});
 }
 
-/* ---------- AI engine ---------- */
-async function callClaude(prompt){
-  const key=$('#apiKey').value.trim();
-  if(!key) throw new Error('Claude API 키를 입력하세요 (AI 모드)');
-  const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{
-    'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:$('#model').value,max_tokens:2500,messages:[{role:'user',content:prompt}]})});
-  const j=await res.json().catch(()=>({}));
-  if(!res.ok) throw new Error('API 오류: '+(j.error&&j.error.message||res.status));
-  const txt=(j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
-  const m=txt.match(/\{[\s\S]*\}/); if(!m) throw new Error('응답을 해석하지 못했어요. 다시 시도해 주세요.');
-  return JSON.parse(m[0]);
-}
-function brief(f){
-  return `[브랜드명] ${f.brand}\n[카테고리] ${f.category||'-'}\n[브랜드 소개] ${f.about||'-'}\n[필수/금지 표현] ${f.rules||'-'}\n[USP]\n${f.usps.map((u,i)=>`USP ${i+1}. ${u.k||u.t}${u.t?' — '+u.t:''}`).join('\n')}\n[타겟] ${f.targetKw}${f.target?' — '+f.target:''}\n[USP × Pain Point 매칭]\n${pairs(f).map(x=>`${x.pair}: USP ${x.ui+1}(${x.u.k}) × P.P ${x.no}(${x.p.k}${x.p.t?' — '+x.p.t:''})`).join('\n')}`;
-}
-async function aiVPs(f,only){
-  const avoid=Object.entries(pairHist).filter(([k])=>!only||k===only).flatMap(([k,v])=>[...v].map(n=>`${k}: ${n}`));
-  const p=`당신은 한국 광고대행사의 시니어 크리에이티브 디렉터입니다. 아래 [USP × Pain Point 매칭] 쌍마다 VP(Value Proposition) "컨셉 이름"을 3개씩 만드세요.
-
-VP 정의: 브랜드의 USP와 고객의 P.P를 결합해, 고객의 문제를 해결해 주는 브랜드만의 가치 제안을 '부를 수 있는 이름'으로 만든 것.
-예시: USP(새벽배송) + P.P(늦은 택배 불편함) = VP(슈팅배송) — 빠름을 '슈팅'이라는 동작 이미지로 조어화
-
-규칙:
-- USP 단어와 P.P 단어를 그대로 이어 붙인 문장·구절 금지 (예: "트러블 없는 순면 커버" ✗)
-- 고유명사처럼 부를 수 있는 2~8자 이름 (공백 최대 1개)
-- 3개는 서로 다른 기법: 조어(합성어), 은유/장면, 의성어·의태어, 역발상/반전, 의인화 중에서 선택
-- 해결된 '상태'나 '감각'을 이름에 담을 것
-- 실존 경쟁사·타 브랜드의 서비스명·상표(예: 로켓배송, 슈팅배송) 사용 금지
-- 근거 없는 최상급·효능 단정, 확인되지 않은 수치 금지. 필수/금지 표현 준수
-- name: 컨셉 이름 / technique: 사용한 기법 / meaning: 왜 이 이름인지 30자 이내 / tags: 해시태그 3개(# 포함, 8자 이내)
-- pair: 매칭 번호 그대로${only?`
-- 이번에는 ${only} 쌍만 만들 것 (다른 쌍은 출력하지 말 것)`:''}${avoid.length?`
-- 아래는 이미 제안한 이름이라 다시 쓰지 말고, 다른 기법·다른 이미지로 새롭게 제안할 것: ${avoid.join(', ')}`:''}
-JSON만 출력:
-{"vps":[{"pair":"1-1","concepts":[{"name":"","technique":"","meaning":"","tags":["#"]}]}]}
-
-${brief(f)}`;
-  const j=await callClaude(p);const res=[];
-  pairs(f).filter(x=>!only||x.pair===only).forEach((x,i)=>{const g=(j.vps||[]).find(a=>String(a.pair)===x.pair)||(only?(j.vps||[])[0]:(j.vps||[])[i])||{};
-    (g.concepts||[]).slice(0,3).forEach(c=>{if(!c.name)return;res.push({pair:x.pair,kw:c.name,tech:c.technique||'',meaning:c.meaning||'',usp:x.u.k,pp:x.p.k,
-      tags:(c.tags||[]).map(t=>t.startsWith('#')?t:'#'+t),stmt:`${J.이(f.targetKw)} 겪는 ${J.을(x.p.k)} ${J.로(x.u.k)} 해결하는 '${c.name}'`})})});
-  return res;
-}
-async function aiCopies(v,f){
-  const p=`당신은 한국 퍼포먼스 마케팅 대행사의 시니어 카피라이터입니다. 선택된 VP 1개로 배너·피드 광고 소재에 바로 올릴 컨셉 카피 10개를 만드세요.
-규칙:
-- main: 메인 카피, 공백 포함 ${MAIN_MAX}자 이내 (반드시 지킬 것)
-- sub: 서브 카피, 공백 포함 ${SUB_MAX}자 이내
-- 설명형 수식어를 빼고 키워드 중심으로 짧게. 명사형·의문형·감탄형 종결 위주
-- 10개 소구 각도(angle) 순서: 문제제기, 공감, 해결 제시, 질문형, 비포/애프터, 손실회피, 타겟 호명, 이유 제시, 숫자/구체화, 감성/약속
-- 숫자/구체화는 브랜드 정보에 있는 사실만 사용 (없으면 구체적 상황 묘사)
-- why: 의도 15자 내외
-- [카피 톤앤무드] ${f.tone} — ${(TONES[f.tone]||TONES['친근']).ai}. 10개 모두 이 톤을 일관되게 유지할 것
-- 선택된 VP의 약속에서 벗어나지 말 것, 필수/금지 표현 준수, 근거 없는 최상급·효능 단정 금지
-JSON만 출력:
-{"copies":[{"angle":"","main":"","sub":"","why":""}]}
-
-[선택된 VP 컨셉] ${v.kw} ${(v.tags||[]).join(' ')}
-의미: ${v.meaning||''}
-정의: ${v.stmt}
-- 10개 중 4개 이상은 컨셉 이름 "${v.kw}"을 카피에 직접 넣어 컨셉을 각인시킬 것
-
-${brief(f)}`;
-  const j=await callClaude(p); return (j.copies||[]).slice(0,10);
-}
-
 /* ---------- render ---------- */
 function resetOut(){vps=[];copies=[];$('#vpOut').innerHTML='<div class="empty">왼쪽에 USP · 타겟 · Pain Point를 입력하고<br><b>VP 자동 생성</b>을 눌러주세요.</div>';$('#vpBar').hidden=true;$('#toneBox').hidden=true;$('#regenTop').hidden=true;pairSeed={};pairHist={};pairRound={};$('#copyCard').hidden=true}
 function renderVPs(){
   const groups=[];vps.forEach((v,i)=>{let g=groups.find(x=>x.pair===v.pair);if(!g){g={pair:v.pair,usp:v.usp,pp:v.pp,items:[]};groups.push(g)}g.items.push(i)});
-  $('#vpOut').innerHTML=groups.map(g=>`<div class="vpgrp"><div class="vpgh"><span class="pn">${esc(g.pair)}</span>USP <b>${esc(g.usp)}</b> + P.P <b>${esc(g.pp)}</b> = VP 컨셉 3안${pairRound[g.pair]>1?`<span class="rd">· ${pairRound[g.pair]}번째 제안</span>`:''}<button class="rg" data-pair="${esc(g.pair)}">↻ 이 조합 다시 제안</button></div><div class="vpcards">`+
+  $('#vpOut').innerHTML=groups.map(g=>`<div class="vpgrp"><div class="vpgh"><span class="pn">${esc(g.pair)}</span>USP <b>${esc(g.usp)}</b> + P.P <b>${esc(g.pp)}</b> = VP 컨셉 3안<button class="rg" data-pair="${esc(g.pair)}" ${(pairRound[g.pair]||1)>MAX_REFRESH?'disabled':''}>↻ 다시 제안 ${(pairRound[g.pair]||1)-1}/${MAX_REFRESH}</button></div><div class="vpcards">`+
     g.items.map(i=>{const v=vps[i];return `<div class="vp ${i===sel?'on':''}" data-i="${i}"><span class="radio"></span>
     <span class="tech">${esc(v.tech||'컨셉')}</span>
     <div class="kwv">${esc(v.kw)}</div>
     <div class="mean">${esc(v.meaning||'')}</div>
     <div class="tags" style="margin-top:6px">${(v.tags||[]).map(t=>`<span>${esc(t)}</span>`).join('')}</div></div>`}).join('')+`</div></div>`).join('')+
-    `<div class="vpnote">${mode==='ai'?'AI가 만든 컨셉이에요.':'기본 엔진은 P.P의 문제 유형을 읽어 컨셉 사전으로 이름을 만들어요. 더 독창적인 컨셉은 AI 모드를 권장해요.'} 집행 전 상표 중복·실제 제공 가치와의 일치 여부를 꼭 확인하세요.</div>
+    `<div class="vpnote">VP 가이드: USP + P.P를 결합해 실제 서비스·기능명으로 쓸 수 있는 이름만 제안해요 (조어형 · 기능형 · 약속형). 조합마다 다시 제안은 ${MAX_REFRESH}회까지, 같은 이름은 반복되지 않아요. 집행 전 상표 중복과 실제 제공 가치와의 일치 여부를 확인하세요.</div>
     <label class="f">선택한 VP 컨셉 이름 다듬기</label><input type="text" id="vpEdit" class="vpedit">`;
   document.querySelectorAll('.vp').forEach(el=>el.onclick=()=>{sel=+el.dataset.i;renderVPs()});
   document.querySelectorAll('.vpgh .rg').forEach(b=>b.onclick=()=>regenPair(b.dataset.pair,b));
   $('#vpEdit').value=vps[sel]?vps[sel].kw:'';
   $('#vpEdit').oninput=e=>{vps[sel].kw=e.target.value;const c=document.querySelector('.vp.on');c.querySelector('.kwv').textContent=e.target.value};
   $('#vpBar').hidden=false;$('#toneBox').hidden=false;$('#regenTop').hidden=false;
+  const allDone=groups.every(g=>(pairRound[g.pair]||1)>MAX_REFRESH);['#regenTop','#regenVP'].forEach(id=>{$(id).disabled=allDone;$(id).title=allDone?'모든 조합의 다시 제안 횟수를 다 썼어요':''});
 }
 const lenCls=(n,max)=>n<=max?'ok':'warn';
 function renderCopies(){
@@ -768,43 +675,53 @@ function validate(f,errEl){
   if(miss.length){errEl.textContent=miss.join(', ')+'을(를) 입력하세요';errEl.hidden=false;return false}errEl.hidden=true;return true;
 }
 async function busy(btn,label,fn){const o=btn.innerHTML;btn.disabled=true;btn.innerHTML=`<span class="spin"></span>${label}`;try{await fn()}finally{btn.disabled=false;btn.innerHTML=o}}
+function syncRegen(){
+  const ps=[...new Set(vps.map(v=>v.pair))];const allDone=ps.length&&ps.every(p=>(pairRound[p]||1)>MAX_REFRESH);
+  ['#regenTop','#regenVP'].forEach(id=>{$(id).disabled=!!allDone;$(id).title=allDone?'모든 조합의 다시 제안 횟수를 다 썼어요':''});
+  document.querySelectorAll('.vpgh .rg').forEach(b=>b.disabled=(pairRound[b.dataset.pair]||1)>MAX_REFRESH);
+}
 function track(list){ // 이름 이력 기록, 새 이름 수 반환
   let fresh=0;list.forEach(v=>{const h=pairHist[v.pair]||(pairHist[v.pair]=new Set());if(!h.has(v.kw)){fresh++;h.add(v.kw)}});return fresh;
 }
 async function doVP(btn,regen){
   const f=getForm();if(!validate(f,$('#err1')))return;$('#err2').hidden=true;
   if(!regen){pairSeed={};pairHist={};pairRound={};}
-  else pairs(f).forEach(x=>pairSeed[x.pair]=(pairSeed[x.pair]||0)+1);
+  else{const ps=pairs(f).filter(x=>(pairRound[x.pair]||1)<=MAX_REFRESH);if(!ps.length)return toast(`모든 조합이 다시 제안 ${MAX_REFRESH}회를 다 썼어요`);ps.forEach(x=>pairSeed[x.pair]=(pairSeed[x.pair]||0)+1);}
   await busy(btn,regen?'다시 제안 중':'생성 중',async()=>{
-    try{const list=mode==='ai'?await aiVPs(f):ruleVPs(f);if(!list.length)throw new Error('컨셉을 만들지 못했어요. 다시 시도해 주세요.');
-      const fresh=track(list);pairs(f).forEach(x=>pairRound[x.pair]=(pairRound[x.pair]||0)+1);
-      vps=list;sel=0;copies=[];$('#copyCard').hidden=true;renderVPs();
-      if(regen&&!fresh&&mode==='rule')toast('기본 엔진 어휘를 한 바퀴 다 썼어요 · 더 새로운 컨셉은 AI 모드를 써보세요');
-      else if(regen)toast(`새 컨셉 ${fresh}개를 제안했어요`);
+    try{const list=ruleVPs(f);if(!list.length)throw new Error('컨셉을 만들지 못했어요. 다시 시도해 주세요.');
+      let use=list;
+      if(regen){const done=new Set(pairs(f).filter(x=>(pairRound[x.pair]||1)>MAX_REFRESH).map(x=>x.pair));use=list.filter(v=>!done.has(v.pair)).concat(vps.filter(v=>done.has(v.pair)));
+        const order=pairs(f).map(x=>x.pair);use.sort((a,b)=>order.indexOf(a.pair)-order.indexOf(b.pair));}
+      const fresh=track(use.filter(v=>!regen||!vps.includes(v)));pairs(f).forEach(x=>{if(!regen||(pairRound[x.pair]||1)<=MAX_REFRESH)pairRound[x.pair]=(pairRound[x.pair]||0)+1});
+      vps=use;sel=0;copies=[];$('#copyCard').hidden=true;renderVPs();
+      if(regen)toast(`새 컨셉 ${fresh}개를 제안했어요`);
       if(window.innerWidth<900)$('#vpOut').scrollIntoView({behavior:'smooth'});}
     catch(e){$('#err1').textContent=e.message;$('#err1').hidden=false}
   });
+  syncRegen();
 }
 async function regenPair(pair,btn){
   const f=getForm();if(!validate(f,$('#err1')))return;
+  if((pairRound[pair]||1)>MAX_REFRESH)return toast(`${pair} 조합은 다시 제안 ${MAX_REFRESH}회를 다 썼어요`);
   const selObj=vps[sel];const selKey=selObj?selObj.pair:null;pairSeed[pair]=(pairSeed[pair]||0)+1;
   await busy(btn,'제안 중',async()=>{
-    try{const list=mode==='ai'?await aiVPs(f,pair):ruleVPs(f,pair);if(!list.length)throw new Error('컨셉을 만들지 못했어요. 다시 시도해 주세요.');
+    try{const list=ruleVPs(f,pair);if(!list.length)throw new Error('컨셉을 만들지 못했어요. 다시 시도해 주세요.');
       const fresh=track(list);pairRound[pair]=(pairRound[pair]||1)+1;
       const first=vps.findIndex(v=>v.pair===pair);const rest=vps.filter(v=>v.pair!==pair);
       rest.splice(first<0?rest.length:first,0,...list);vps=rest;
       if(selKey===pair){sel=vps.findIndex(v=>v.pair===pair);copies=[];$('#copyCard').hidden=true;}
       else sel=Math.max(0,vps.indexOf(selObj));
       renderVPs();
-      toast(!fresh&&mode==='rule'?'기본 엔진 어휘를 한 바퀴 다 썼어요 · AI 모드를 써보세요':`${pair} 조합 새 컨셉 ${fresh}개`);
+      toast(`${pair} 조합 새 컨셉 ${fresh}개 · 남은 다시 제안 ${MAX_REFRESH-(pairRound[pair]-1)}회`);
       const g=[...document.querySelectorAll('.vpgh .rg')].find(b=>b.dataset.pair===pair);if(g)g.closest('.vpgrp').scrollIntoView({behavior:'smooth',block:'nearest'});}
     catch(e){$('#err2').textContent=e.message;$('#err2').hidden=false}
   });
+  syncRegen();
 }
 async function doCopies(btn){
   const f=getForm();if(!vps[sel])return;
   await busy(btn,'카피 뽑는 중',async()=>{
-    try{copies=mode==='ai'?await aiCopies(vps[sel],f):ruleCopies(vps[sel],f);renderCopies();$('#copyCard').scrollIntoView({behavior:'smooth'})}
+    try{copies=ruleCopies(vps[sel],f);renderCopies();$('#copyCard').scrollIntoView({behavior:'smooth'})}
     catch(e){$('#err2').textContent=e.message;$('#err2').hidden=false}
   });
 }
@@ -826,7 +743,7 @@ $('#sample').onclick=()=>{setForm({brand:'순면하루',category:'생리대',ton
   pps:[{k:'피부 트러블',t:'오래 착용하면 생기는 피부 트러블',u:0},{k:'냄새 걱정',t:'하루 종일 신경 쓰이는 냄새',u:1}]});setEditing('');refreshBrands('');resetOut();saveDraftOnly();toast('예시를 채웠어요')};
 
 /* 처음 들어오면 입력값은 항상 빈 상태로 시작 (저장된 브랜드는 유지) */
-setMode(mode);setForm({});editing='';LS.set('ccs_editing','');try{localStorage.removeItem('ccs_draft')}catch(e){}refreshBrands('');dirty=false;renderEditing();showView('studio');
+['ccs_mode','ccs_key','ccs_model'].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});setForm({});editing='';LS.set('ccs_editing','');try{localStorage.removeItem('ccs_draft')}catch(e){}refreshBrands('');dirty=false;renderEditing();showView('studio');
 })();
 </script>
 </body>
