@@ -58,19 +58,6 @@ textarea{resize:vertical;min-height:72px}
 .vp .tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
 .vp .tags span{font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:2px 7px}
 .vp.on .tags span{background:var(--panel)}
-.recbtn{display:flex;gap:6px;margin-top:6px}
-.recbtn .add{margin-top:0;flex:1}
-.recbtn .ai{border:1px solid var(--accent);color:var(--accent);background:var(--accent-soft);border-style:solid;font-weight:700}
-.rec{margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg)}
-.rec .rh{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub);margin-bottom:8px}
-.rec .rh b{color:var(--ink)}.rec .rh span{flex:1}
-.rec .chips{display:flex;flex-direction:column;gap:6px}
-.chip{display:flex;gap:8px;align-items:flex-start;text-align:left;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:9px;padding:8px 10px;cursor:pointer;font:inherit}
-.chip:hover{border-color:var(--accent)}
-.chip.used{opacity:.45;cursor:default;border-style:dashed}
-.chip .ck{font-weight:800;font-size:13.5px;white-space:nowrap;color:var(--accent)}
-.chip .cd{font-size:12.5px;line-height:1.45}
-.chip .cw{display:block;font-size:11.5px;color:var(--sub)}
 .len.ok{color:var(--ok)}.len.warn{color:var(--warn);font-weight:700}
 .x{border:1px solid var(--line);background:transparent;color:var(--sub);border-radius:8px;width:36px;cursor:pointer;font-size:16px}
 .add{margin-top:6px;border:1px dashed var(--line);background:transparent;color:var(--sub);border-radius:8px;padding:7px;width:100%;cursor:pointer;font:inherit;font-size:13px}
@@ -214,20 +201,12 @@ footer{max-width:1280px;margin:0 auto;padding:0 16px 30px;color:var(--sub);font-
     <label class="f">타겟 Pain Point <em>*</em></label>
     <div class="lihead"><span>설명</span><span>키워드 (카피에 사용)</span></div>
     <div class="list" id="ppList"></div>
-    <div class="recbtn">
-      <button class="add" data-add="pp">+ Pain Point 추가</button>
-      <button class="add ai" id="recPP">✨ AI 추천 받기</button>
-    </div>
-    <div class="hint">설명을 쓰면 키워드가 자동으로 잡혀요. AI 추천은 브랜드 정보·USP·타겟을 보고 Pain Point 후보 6개를 제안해요 (Claude API 키 필요).</div>
-    <div class="err" id="errRec" hidden></div>
-    <div class="rec" id="ppRec" hidden>
-      <div class="rh"><b>AI 추천 Pain Point</b><span>클릭하면 목록에 추가돼요 · AI 추정이므로 검토 후 사용</span><button class="btn ghost sm" id="recAll">전체 추가</button></div>
-      <div class="chips" id="recChips"></div>
-    </div>
+    <button class="add" data-add="pp">+ Pain Point 추가</button>
+    <div class="hint">설명을 쓰면 키워드가 자동으로 잡혀요. 어색하면 키워드 칸만 고쳐주세요.</div>
 
     <div id="aiSet" hidden>
       <div class="aibox">
-        AI 모드·AI 추천은 내 Claude API 키로 브라우저에서 직접 호출해요. 키는 이 브라우저(localStorage)에만 저장되고 서버로 보내지지 않아요. 공용 PC에서는 사용 후 키를 지워주세요.
+        AI 모드는 내 Claude API 키로 브라우저에서 직접 호출해요. 키는 이 브라우저(localStorage)에만 저장되고 서버로 보내지지 않아요. 공용 PC에서는 사용 후 키를 지워주세요.
       </div>
       <div class="row">
         <div><label class="f">Claude API 키</label><input type="password" id="apiKey" placeholder="sk-ant-..."></div>
@@ -468,52 +447,6 @@ JSON만 출력:
 ${brief(f)}`;
   const j=await callClaude(p); return (j.copies||[]).slice(0,10);
 }
-
-/* ---------- AI recommend Pain Point ---------- */
-let recs=[];
-async function aiRecPP(f){
-  const have=f.pps.map(p=>p.k).join(', ')||'없음';
-  const p=`당신은 한국 퍼포먼스 마케팅 대행사의 시니어 전략가입니다. 아래 브랜드의 타겟이 실제로 겪을 법한 Pain Point 후보 6개를 제안하세요.
-규칙:
-- 브랜드 USP로 해결 가능한 불편 위주로 (USP와 연결되지 않는 불편은 제외)
-- 기능적 불편(사용 불편·품질), 정서적 불편(불안·눈치), 상황적 불편(시간·장소·비용)을 골고루 섞을 것
-- t: 타겟 입장에서 쓴 구체적 상황 설명, 25자 이내 명사구
-- k: 카피에 넣을 키워드, 공백 포함 8자 이내 명사구
-- usp: 이 불편을 해결하는 USP 키워드
-- type: 기능 / 정서 / 상황 중 하나
-- 이미 입력된 Pain Point(${have})와 겹치지 않게
-- 실제 조사 데이터가 아닌 추정이므로 단정적 수치는 쓰지 말 것
-JSON만 출력:
-{"pps":[{"t":"","k":"","usp":"","type":""}]}
-
-${brief(f)}`;
-  const j=await callClaude(p); return (j.pps||[]).slice(0,6);
-}
-function addPP(r){
-  const rows=[...document.querySelectorAll('#ppList .li')];
-  const empty=rows.find(x=>!x.querySelector('.tx').value.trim()&&!x.querySelector('.kw').value.trim());
-  if(empty){const tx=empty.querySelector('.tx'),k=empty.querySelector('.kw');tx.value=r.t;k.value=r.k;k.dataset.auto='0'}
-  else addItem('pp',r.t,r.k);
-  r.used=true;LS.set('ccs_draft',getForm());
-}
-function renderRecs(){
-  $('#recChips').innerHTML=recs.map((r,i)=>`<button class="chip ${r.used?'used':''}" data-i="${i}" ${r.used?'disabled':''}>
-    <span class="ck">${esc(r.k)}</span><span class="cd">${esc(r.t)}<span class="cw">${esc(r.type||'')}${r.usp?' · 해결 USP: '+esc(r.usp):''}${r.used?' · 추가됨':''}</span></span></button>`).join('');
-  document.querySelectorAll('#recChips .chip').forEach(c=>c.onclick=()=>{const r=recs[+c.dataset.i];if(r.used)return;addPP(r);renderRecs();toast('Pain Point 추가')});
-  $('#ppRec').hidden=!recs.length;
-}
-$('#recAll').onclick=()=>{let n=0;recs.forEach(r=>{if(!r.used){addPP(r);n++}});renderRecs();if(n)toast(n+'개 추가했어요')};
-$('#recPP').onclick=async e=>{
-  const f=getForm();const er=$('#errRec');
-  const miss=[];if(!f.brand)miss.push('브랜드명');if(!f.usps.length)miss.push('USP');if(!f.target&&!f.targetKw)miss.push('타겟');
-  if(miss.length){er.textContent='AI 추천 전에 '+miss.join(', ')+'을(를) 먼저 입력하세요';er.hidden=false;return}
-  if(!$('#apiKey').value.trim()){$('#aiSet').hidden=false;er.textContent='AI 추천은 Claude API 키가 필요해요. 아래에 키를 입력한 뒤 다시 눌러주세요.';er.hidden=false;$('#apiKey').focus();return}
-  er.hidden=true;
-  await busy(e.currentTarget,'추천 받는 중',async()=>{
-    try{recs=await aiRecPP(f);if(!recs.length)throw new Error('추천 결과가 비어 있어요. 다시 시도해 주세요.');renderRecs()}
-    catch(x){er.textContent=x.message;er.hidden=false}
-  });
-};
 
 /* ---------- render ---------- */
 function resetOut(){vps=[];copies=[];$('#vpOut').innerHTML='<div class="empty">왼쪽에 USP · 타겟 · Pain Point를 입력하고<br><b>VP 자동 생성</b>을 눌러주세요.</div>';$('#vpBar').hidden=true;$('#copyCard').hidden=true}
