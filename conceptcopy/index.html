@@ -58,6 +58,19 @@ textarea{resize:vertical;min-height:72px}
 .vp .tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
 .vp .tags span{font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:2px 7px}
 .vp.on .tags span{background:var(--panel)}
+.recbtn{display:flex;gap:6px;margin-top:6px}
+.recbtn .add{margin-top:0;flex:1}
+.recbtn .ai{border:1px solid var(--accent);color:var(--accent);background:var(--accent-soft);border-style:solid;font-weight:700}
+.rec{margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg)}
+.rec .rh{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub);margin-bottom:8px}
+.rec .rh b{color:var(--ink)}.rec .rh span{flex:1}
+.rec .chips{display:flex;flex-direction:column;gap:6px}
+.chip{display:flex;gap:8px;align-items:flex-start;text-align:left;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:9px;padding:8px 10px;cursor:pointer;font:inherit}
+.chip:hover{border-color:var(--accent)}
+.chip.used{opacity:.45;cursor:default;border-style:dashed}
+.chip .ck{font-weight:800;font-size:13.5px;white-space:nowrap;color:var(--accent)}
+.chip .cd{font-size:12.5px;line-height:1.45}
+.chip .cw{display:block;font-size:11.5px;color:var(--sub)}
 .len.ok{color:var(--ok)}.len.warn{color:var(--warn);font-weight:700}
 .x{border:1px solid var(--line);background:transparent;color:var(--sub);border-radius:8px;width:36px;cursor:pointer;font-size:16px}
 .add{margin-top:6px;border:1px dashed var(--line);background:transparent;color:var(--sub);border-radius:8px;padding:7px;width:100%;cursor:pointer;font:inherit;font-size:13px}
@@ -169,15 +182,20 @@ footer{max-width:1280px;margin:0 auto;padding:0 16px 30px;color:var(--sub);font-
     <label class="f">타겟 Pain Point <em>*</em></label>
     <div class="lihead"><span>설명</span><span>키워드 (카피에 사용)</span></div>
     <div class="list" id="ppList"></div>
-    <button class="add" data-add="pp">+ Pain Point 추가</button>
-    <div class="hint">설명을 쓰면 키워드가 자동으로 잡혀요. 어색하면 키워드 칸만 고쳐주세요.</div>
-
-    <label class="f">기대 결과 키워드 <span style="font-weight:400">— 선택</span></label>
-    <input type="text" id="benefit" placeholder="예: 하루 종일 편안함">
+    <div class="recbtn">
+      <button class="add" data-add="pp">+ Pain Point 추가</button>
+      <button class="add ai" id="recPP">✨ AI 추천 받기</button>
+    </div>
+    <div class="hint">설명을 쓰면 키워드가 자동으로 잡혀요. AI 추천은 브랜드 정보·USP·타겟을 보고 Pain Point 후보 6개를 제안해요 (Claude API 키 필요).</div>
+    <div class="err" id="errRec" hidden></div>
+    <div class="rec" id="ppRec" hidden>
+      <div class="rh"><b>AI 추천 Pain Point</b><span>클릭하면 목록에 추가돼요 · AI 추정이므로 검토 후 사용</span><button class="btn ghost sm" id="recAll">전체 추가</button></div>
+      <div class="chips" id="recChips"></div>
+    </div>
 
     <div id="aiSet" hidden>
       <div class="aibox">
-        AI 모드는 내 Claude API 키로 브라우저에서 직접 호출해요. 키는 이 브라우저(localStorage)에만 저장되고 서버로 보내지지 않아요. 공용 PC에서는 사용 후 키를 지워주세요.
+        AI 모드·AI 추천은 내 Claude API 키로 브라우저에서 직접 호출해요. 키는 이 브라우저(localStorage)에만 저장되고 서버로 보내지지 않아요. 공용 PC에서는 사용 후 키를 지워주세요.
       </div>
       <div class="row">
         <div><label class="f">Claude API 키</label><input type="password" id="apiKey" placeholder="sk-ant-..."></div>
@@ -290,12 +308,12 @@ $('#targetKw').addEventListener('input',e=>{e.target.dataset.auto=e.target.value
 function getForm(){
   const target=$('#target').value.trim();
   return {brand:$('#brand').value.trim(),category:$('#category').value.trim(),tone:$('#tone').value,about:$('#about').value.trim(),rules:$('#rules').value.trim(),
-    usps:items('#uspList'),target,targetKw:$('#targetKw').value.trim()||kwOf(target,'target'),pps:items('#ppList'),benefit:$('#benefit').value.trim()};
+    usps:items('#uspList'),target,targetKw:$('#targetKw').value.trim()||kwOf(target,'target'),pps:items('#ppList')};
 }
 const norm=a=>(a||[]).map(x=>typeof x==='string'?{t:x,k:''}:x);
 function setForm(f){
   $('#brand').value=f.brand||'';$('#category').value=f.category||'';$('#tone').value=f.tone||'친근·대화체';$('#about').value=f.about||'';$('#rules').value=f.rules||'';
-  $('#target').value=f.target||'';$('#targetKw').value=f.targetKw||kwOf(f.target,'target');$('#targetKw').dataset.auto=f.targetKw?'0':'1';$('#benefit').value=f.benefit||'';
+  $('#target').value=f.target||'';$('#targetKw').value=f.targetKw||kwOf(f.target,'target');$('#targetKw').dataset.auto=f.targetKw?'0':'1';
   $('#uspList').innerHTML='';const u=norm(f.usps);(u.length?u:[{t:'',k:''}]).forEach(v=>addItem('usp',v.t,v.k));
   $('#ppList').innerHTML='';const p=norm(f.pps);(p.length?p:[{t:'',k:''}]).forEach(v=>addItem('pp',v.t,v.k));
 }
@@ -332,16 +350,16 @@ const J={
 
 /* ---------- rule engine ---------- */
 const VP_PATTERNS=[
-  (u,p,bn)=>`${p} 없는 ${u}`.replace(/제로 없는/,'제로'),
-  (u,p,bn)=>`${J.로(u)} ${bn}`,
-  (u,p,bn)=>`${p} 대신 ${bn}`
+  (u,p)=>`${p} 없는 ${u}`.replace(/제로 없는/,'제로'),
+  (u,p)=>`${p}엔 ${u}`,
+  (u,p)=>`${J.로(u)} ${p} 끝`
 ];
 function ruleVPs(f){
-  const BN=f.benefit||'편안함';const out=[];
+  const out=[];
   f.usps.forEach((u,ui)=>f.pps.forEach((p,pi)=>{
     VP_PATTERNS.forEach((fn,k)=>out.push({
-      kw:fn(u.k,p.k,BN), tags:[tag(u.k),tag(p.k+'해결'),tag(BN)],
-      stmt:`${J.이(f.targetKw)} 겪는 ${J.을(p.k)} ${J.로(u.k)} 해결해 ${J.을(BN)} 주는 ${f.brand}`,
+      kw:fn(u.k,p.k), tags:[tag(u.k),tag(p.k+'해결'),tag(f.brand)],
+      stmt:`${J.이(f.targetKw)} 겪는 ${J.을(p.k)} ${J.로(u.k)} 해결하는 ${f.brand}`,
       usp:u.k,pp:p.k,why:`USP ${ui+1} × P.P ${pi+1} 조합`
     }));
   }));
@@ -354,18 +372,18 @@ function ruleVPs(f){
   return res;
 }
 const ANGLES=[
-  ['문제제기',(v,f,BN)=>[`아직도 ${v.pp}?`,`${J.로(v.usp)} 바꿔보세요`,'익숙한 불편을 짚어 스크롤을 멈추게 함']],
-  ['공감',(v,f,BN)=>[`${v.pp}, 나만 그래?`,`${J.로(f.brand)} 해결했어요`,'타겟 본인의 목소리로 동일시 유도']],
-  ['해결 제시',(v,f,BN)=>[`${v.pp} 끝!`,`답은 ${v.usp}`,'문제→해결을 짧게 끊어 USP 인지']],
-  ['질문형',(v,f,BN)=>[`혹시 ${v.pp}?`,`${v.usp} 써보셨나요?`,'질문으로 자기 해당 여부 판단 유도']],
-  ['비포/애프터',(v,f,BN)=>[`${v.pp} → ${BN}`,`${f.brand}의 ${v.usp}`,'전후 대비로 효용을 상상하게 함']],
-  ['손실회피',(v,f,BN)=>[`${v.pp}, 또 참아요?`,`오늘부터 ${J.로(f.brand)}`,'변하지 않을 때의 손해 강조']],
-  ['타겟 호명',(v,f,BN)=>[`${f.targetKw}의 선택`,`${v.usp}, ${f.brand}`,'타겟을 호명해 "내 얘기"로 인식']],
-  ['이유 제시',(v,f,BN)=>[`${J.을(f.brand)} 고르는 이유`,v.usp,'선택 근거(RTB)를 전면 배치']],
-  ['브랜드 선언',(v,f,BN)=>[`그래서, ${f.brand}`,`${v.usp}${f.category?' · '+f.category+'의 새 기준':''}`,'USP를 브랜드 정체성으로 연결']],
-  ['감성/약속',(v,f,BN)=>[`매일, ${BN}`,`${J.이(f.brand)} 지킬게요`,'불편이 사라진 상태를 약속']]
+  ['문제제기',(v,f)=>[`아직도 ${v.pp}?`,`${J.로(v.usp)} 바꿔보세요`,'익숙한 불편을 짚어 스크롤을 멈추게 함']],
+  ['공감',(v,f)=>[`${v.pp}, 나만 그래?`,`${J.로(f.brand)} 해결했어요`,'타겟 본인의 목소리로 동일시 유도']],
+  ['해결 제시',(v,f)=>[`${v.pp} 끝!`,`답은 ${v.usp}`,'문제→해결을 짧게 끊어 USP 인지']],
+  ['질문형',(v,f)=>[`혹시 ${v.pp}?`,`${v.usp} 써보셨나요?`,'질문으로 자기 해당 여부 판단 유도']],
+  ['비포/애프터',(v,f)=>[`${v.pp}, 이제 안녕`,`${f.brand}의 ${v.usp}`,'전후 대비로 효용을 상상하게 함']],
+  ['손실회피',(v,f)=>[`${v.pp}, 또 참아요?`,`오늘부터 ${J.로(f.brand)}`,'변하지 않을 때의 손해 강조']],
+  ['타겟 호명',(v,f)=>[`${f.targetKw}의 선택`,`${v.usp}, ${f.brand}`,'타겟을 호명해 "내 얘기"로 인식']],
+  ['이유 제시',(v,f)=>[`${J.을(f.brand)} 고르는 이유`,v.usp,'선택 근거(RTB)를 전면 배치']],
+  ['브랜드 선언',(v,f)=>[`그래서, ${f.brand}`,`${v.usp}${f.category?' · '+f.category+'의 새 기준':''}`,'USP를 브랜드 정체성으로 연결']],
+  ['감성/약속',(v,f)=>[`${v.pp} 걱정 없는 매일`,`${J.이(f.brand)} 지킬게요`,'불편이 사라진 상태를 약속']]
 ];
-function ruleCopies(v,f){const BN=f.benefit||'편안함';return ANGLES.map(([ang,fn])=>{const [m,s,w]=fn(v,f,BN);return {angle:ang,main:m,sub:s,why:w}})}
+function ruleCopies(v,f){return ANGLES.map(([ang,fn])=>{const [m,s,w]=fn(v,f);return {angle:ang,main:m,sub:s,why:w}})}
 
 /* ---------- AI engine ---------- */
 async function callClaude(prompt){
@@ -381,14 +399,14 @@ async function callClaude(prompt){
   return JSON.parse(m[0]);
 }
 function brief(f){
-  return `[브랜드명] ${f.brand}\n[카테고리] ${f.category||'-'}\n[톤앤매너] ${f.tone}\n[브랜드 소개] ${f.about||'-'}\n[필수/금지 표현] ${f.rules||'-'}\n[USP]\n${f.usps.map((u,i)=>`${i+1}. ${u.t} (키워드: ${u.k})`).join('\n')}\n[타겟] ${f.target} (키워드: ${f.targetKw})\n[Pain Point]\n${f.pps.map((p,i)=>`${i+1}. ${p.t} (키워드: ${p.k})`).join('\n')}\n[기대 결과] ${f.benefit||'-'}`;
+  return `[브랜드명] ${f.brand}\n[카테고리] ${f.category||'-'}\n[톤앤매너] ${f.tone}\n[브랜드 소개] ${f.about||'-'}\n[필수/금지 표현] ${f.rules||'-'}\n[USP]\n${f.usps.map((u,i)=>`${i+1}. ${u.t} (키워드: ${u.k})`).join('\n')}\n[타겟] ${f.target} (키워드: ${f.targetKw})\n[Pain Point]\n${f.pps.map((p,i)=>`${i+1}. ${p.t} (키워드: ${p.k})`).join('\n')}`;
 }
 async function aiVPs(f){
   const p=`당신은 한국 퍼포먼스 마케팅 대행사의 시니어 카피라이터입니다. 아래 브랜드 정보로 VP(Value Proposition) 후보 3개를 "키워드형"으로 만드세요.
 규칙:
 - kw: VP를 압축한 키워드 문구, 공백 포함 12자 이내 (예: "트러블 없는 순면", "순면으로 하루 편안"). 문장형·서술형 금지
 - tags: VP를 대표하는 해시태그 3개 (각 8자 이내, # 포함)
-- stmt: "[타겟]이 겪는 [P.P]를 [USP]로 해결해 [Benefit]을 주는 [브랜드]" 구조의 한 줄 정의
+- stmt: "[타겟]이 겪는 [P.P]를 [USP]로 해결하는 [브랜드]" 구조의 한 줄 정의
 - usp, pp: 사용한 USP·Pain Point 키워드
 - why: 이 VP가 설득력 있는 이유 15자 내외
 - 3개는 서로 다른 USP×P.P 조합 또는 다른 관점
@@ -418,6 +436,52 @@ JSON만 출력:
 ${brief(f)}`;
   const j=await callClaude(p); return (j.copies||[]).slice(0,10);
 }
+
+/* ---------- AI recommend Pain Point ---------- */
+let recs=[];
+async function aiRecPP(f){
+  const have=f.pps.map(p=>p.k).join(', ')||'없음';
+  const p=`당신은 한국 퍼포먼스 마케팅 대행사의 시니어 전략가입니다. 아래 브랜드의 타겟이 실제로 겪을 법한 Pain Point 후보 6개를 제안하세요.
+규칙:
+- 브랜드 USP로 해결 가능한 불편 위주로 (USP와 연결되지 않는 불편은 제외)
+- 기능적 불편(사용 불편·품질), 정서적 불편(불안·눈치), 상황적 불편(시간·장소·비용)을 골고루 섞을 것
+- t: 타겟 입장에서 쓴 구체적 상황 설명, 25자 이내 명사구
+- k: 카피에 넣을 키워드, 공백 포함 8자 이내 명사구
+- usp: 이 불편을 해결하는 USP 키워드
+- type: 기능 / 정서 / 상황 중 하나
+- 이미 입력된 Pain Point(${have})와 겹치지 않게
+- 실제 조사 데이터가 아닌 추정이므로 단정적 수치는 쓰지 말 것
+JSON만 출력:
+{"pps":[{"t":"","k":"","usp":"","type":""}]}
+
+${brief(f)}`;
+  const j=await callClaude(p); return (j.pps||[]).slice(0,6);
+}
+function addPP(r){
+  const rows=[...document.querySelectorAll('#ppList .li')];
+  const empty=rows.find(x=>!x.querySelector('.tx').value.trim()&&!x.querySelector('.kw').value.trim());
+  if(empty){const tx=empty.querySelector('.tx'),k=empty.querySelector('.kw');tx.value=r.t;k.value=r.k;k.dataset.auto='0'}
+  else addItem('pp',r.t,r.k);
+  r.used=true;LS.set('ccs_draft',getForm());
+}
+function renderRecs(){
+  $('#recChips').innerHTML=recs.map((r,i)=>`<button class="chip ${r.used?'used':''}" data-i="${i}" ${r.used?'disabled':''}>
+    <span class="ck">${esc(r.k)}</span><span class="cd">${esc(r.t)}<span class="cw">${esc(r.type||'')}${r.usp?' · 해결 USP: '+esc(r.usp):''}${r.used?' · 추가됨':''}</span></span></button>`).join('');
+  document.querySelectorAll('#recChips .chip').forEach(c=>c.onclick=()=>{const r=recs[+c.dataset.i];if(r.used)return;addPP(r);renderRecs();toast('Pain Point 추가')});
+  $('#ppRec').hidden=!recs.length;
+}
+$('#recAll').onclick=()=>{let n=0;recs.forEach(r=>{if(!r.used){addPP(r);n++}});renderRecs();if(n)toast(n+'개 추가했어요')};
+$('#recPP').onclick=async e=>{
+  const f=getForm();const er=$('#errRec');
+  const miss=[];if(!f.brand)miss.push('브랜드명');if(!f.usps.length)miss.push('USP');if(!f.target&&!f.targetKw)miss.push('타겟');
+  if(miss.length){er.textContent='AI 추천 전에 '+miss.join(', ')+'을(를) 먼저 입력하세요';er.hidden=false;return}
+  if(!$('#apiKey').value.trim()){$('#aiSet').hidden=false;er.textContent='AI 추천은 Claude API 키가 필요해요. 아래에 키를 입력한 뒤 다시 눌러주세요.';er.hidden=false;$('#apiKey').focus();return}
+  er.hidden=true;
+  await busy(e.currentTarget,'추천 받는 중',async()=>{
+    try{recs=await aiRecPP(f);if(!recs.length)throw new Error('추천 결과가 비어 있어요. 다시 시도해 주세요.');renderRecs()}
+    catch(x){er.textContent=x.message;er.hidden=false}
+  });
+};
 
 /* ---------- render ---------- */
 function resetOut(){vps=[];copies=[];$('#vpOut').innerHTML='<div class="empty">왼쪽에 USP · 타겟 · Pain Point를 입력하고<br><b>VP 자동 생성</b>을 눌러주세요.</div>';$('#vpBar').hidden=true;$('#copyCard').hidden=true}
@@ -483,7 +547,7 @@ $('#csv').onclick=()=>{
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${f.brand||'brand'}_컨셉카피.csv`;a.click();
 };
 $('#sample').onclick=()=>{setForm({brand:'순면하루',category:'생리대',tone:'친근·대화체',about:'유기농 순면 커버와 무향 설계를 내세운 생리대 브랜드. 스마트스토어·자사몰 판매.',rules:'최상급(최고·1위) 표현 금지',
-  usps:[{t:'100% 유기농 순면 커버',k:''},{t:'향료·염소표백 없는 설계',k:''}],target:'민감한 피부의 2030 직장인 여성',pps:[{t:'오래 착용하면 생기는 피부 트러블',k:''},{t:'하루 종일 신경 쓰이는 답답함',k:''}],benefit:'하루 종일 편안함'});resetOut();toast('예시를 채웠어요')};
+  usps:[{t:'100% 유기농 순면 커버',k:''},{t:'향료·염소표백 없는 설계',k:''}],target:'민감한 피부의 2030 직장인 여성',pps:[{t:'오래 착용하면 생기는 피부 트러블',k:''},{t:'하루 종일 신경 쓰이는 답답함',k:''}]});resetOut();toast('예시를 채웠어요')};
 
 setMode(mode);refreshBrands();setForm(LS.get('ccs_draft',{}));
 })();
