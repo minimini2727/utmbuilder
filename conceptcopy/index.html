@@ -161,6 +161,38 @@ details.guide ul{margin:8px 0 0;padding-left:18px;font-size:12.5px;color:var(--s
 .op{display:grid;place-items:center;font-weight:800;color:var(--sub);font-size:16px}
 main{padding-top:16px!important}
 @media (max-width:600px){.formula{flex-wrap:nowrap;gap:4px}.fx{min-width:0;flex:1 1 0;padding:7px 4px}.fx b{font-size:12.5px;word-break:keep-all}.op{font-size:13px}}
+.tabs{display:flex;gap:4px;margin-left:8px}
+.tabs button{border:0;background:transparent;color:var(--sub);font:inherit;font-size:14px;font-weight:700;padding:7px 12px;border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.tabs button.on{color:var(--ink);background:var(--chip)}
+.tabs .cnt{font-size:11px;background:var(--accent);color:#fff;border-radius:10px;padding:1px 7px}
+@media (max-width:600px){.tabs{order:3;width:100%;margin-left:0}.tabs button{flex:1;justify-content:center}}
+.editing{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12.5px;color:var(--sub)}
+.editing b{color:var(--ink)}
+.editing .dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
+.editing.dirty .dot{background:var(--warn)}
+.editing .st{margin-left:auto;font-weight:700}
+.editing.dirty .st{color:var(--warn)}
+.mgr{max-width:1280px;margin:0 auto;padding:20px 16px 60px}
+.mgr-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.mgr-top h2{margin:0;font-size:20px;letter-spacing:-.02em}
+.mgr-top .sp{flex:1}
+.mgr-top input{width:220px;max-width:100%}
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.bcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
+.bcard .bh{display:flex;align-items:flex-start;gap:8px}
+.bcard .bn{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.bcard .bm{font-size:12px;color:var(--sub);margin-top:2px}
+.bcard .badge{margin-left:auto;font-size:11px;font-weight:800;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:2px 8px;white-space:nowrap}
+.bcard .row2{font-size:12px;color:var(--sub)}
+.bcard .row2 b{display:block;font-size:11px;margin-bottom:4px}
+.bcard .chs{display:flex;flex-wrap:wrap;gap:5px}
+.bcard .chs span{background:var(--chip);color:var(--ink);border-radius:6px;padding:2px 8px;font-size:12px}
+.bcard .chs span i{font-style:normal;font-weight:800;color:var(--accent);margin-right:4px}
+.bcard .about{font-size:12.5px;color:var(--sub);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.bcard .acts{display:flex;gap:6px;margin-top:auto;padding-top:6px;border-top:1px solid var(--line)}
+.bcard .acts .btn{flex:1}
+.bcard .acts .del{flex:0 0 auto;color:var(--warn)}
+.mgr-note{font-size:12px;color:var(--sub);margin-top:16px}
 footer{max-width:1280px;margin:0 auto;padding:0 16px 30px;color:var(--sub);font-size:12px}
 </style>
 </head>
@@ -168,6 +200,10 @@ footer{max-width:1280px;margin:0 auto;padding:0 16px 30px;color:var(--sub);font-
 <header class="top">
   <div class="top-in">
     <div class="logo">Concept<span>.</span>Copy Studio</div>
+    <nav class="tabs" role="tablist">
+      <button id="tabStudio" class="on">카피 스튜디오</button>
+      <button id="tabBrands">브랜드 관리 <span class="cnt" id="brandCnt">0</span></button>
+    </nav>
     <div class="top-sp"></div>
     <div class="mode" role="tablist">
       <button id="mRule" class="on">기본 엔진</button>
@@ -176,6 +212,7 @@ footer{max-width:1280px;margin:0 auto;padding:0 16px 30px;color:var(--sub);font-
   </div>
 </header>
 
+<div id="viewStudio">
 <section class="intro" aria-label="VP 설명">
   <div class="intro-in">
     <div>
@@ -197,12 +234,13 @@ footer{max-width:1280px;margin:0 auto;padding:0 16px 30px;color:var(--sub);font-
 <!-- LEFT: inputs -->
 <section>
   <div class="card">
-    <div class="step"><b>0</b><h2>브랜드 불러오기</h2><small>브라우저에 저장됨</small></div>
+    <div class="step"><b>0</b><h2>브랜드 불러오기</h2><small><a href="#" id="goMgr" style="color:inherit">브랜드 관리 →</a></small></div>
     <div class="brandbar">
       <select id="brandList"><option value="">+ 새 브랜드</option></select>
-      <button class="btn ghost sm" id="saveBrand">저장</button>
-      <button class="btn ghost sm" id="delBrand">삭제</button>
+      <button class="btn sm" id="saveBrand">저장</button>
+      <button class="btn ghost sm" id="saveAsNew" hidden>새 브랜드로 저장</button>
     </div>
+    <div class="editing" id="editing"><span class="dot"></span><span id="editTxt">새 브랜드 작성 중</span><span class="st" id="editSt"></span></div>
   </div>
 
   <div class="card">
@@ -302,6 +340,21 @@ footer{max-width:1280px;margin:0 auto;padding:0 16px 30px;color:var(--sub);font-
   </div>
 </section>
 </main>
+</div>
+
+<section class="mgr" id="viewBrands" hidden>
+  <div class="mgr-top">
+    <h2>브랜드 관리</h2><span class="hint" id="mgrCount"></span>
+    <span class="sp"></span>
+    <input type="text" id="mgrSearch" placeholder="브랜드·카테고리 검색">
+    <button class="btn sm" id="mgrNew">+ 새 브랜드</button>
+    <button class="btn ghost sm" id="mgrExport">내보내기</button>
+    <button class="btn ghost sm" id="mgrImport">가져오기</button>
+    <input type="file" id="mgrFile" accept=".json,application/json" hidden>
+  </div>
+  <div class="bgrid" id="mgrGrid"></div>
+  <div class="mgr-note">브랜드는 이 브라우저에만 저장돼요. 다른 PC·팀원과 쓰려면 <b>내보내기</b>로 받은 JSON 파일을 상대 브라우저에서 <b>가져오기</b> 하세요 (같은 이름은 덮어쓰기 전에 확인해요).</div>
+</section>
 <footer>입력값과 저장한 브랜드는 이 브라우저에만 보관돼요. 생성된 카피는 초안이므로 광고 심의 기준(최상급·효능 표현 등)을 꼭 확인한 뒤 사용하세요.</footer>
 <div class="toast" id="toast"></div>
 
@@ -371,7 +424,7 @@ function renderDemo(){
 }
 document.querySelectorAll('#gender button').forEach(b=>b.onclick=()=>{demo.g=b.dataset.v;renderDemo();saveDraft()});
 document.querySelectorAll('#ages button').forEach(b=>b.onclick=()=>{const v=b.dataset.v;demo.ages=demo.ages.includes(v)?demo.ages.filter(x=>x!==v):[...demo.ages,v];renderDemo();saveDraft()});
-function saveDraft(){LS.set('ccs_draft',getForm())}
+function saveDraft(){LS.set('ccs_draft',getForm());markDirty()}
 
 function getForm(){
   return {brand:$('#brand').value.trim(),category:$('#category').value.trim(),tone:tone,about:$('#about').value.trim(),rules:$('#rules').value.trim(),
@@ -387,15 +440,98 @@ function setForm(f){
   renumber();
 }
 
-/* ---------- brand storage ---------- */
-function refreshBrands(selName){
-  const b=LS.get('ccs_brands',{});const s=$('#brandList');
-  s.innerHTML='<option value="">+ 새 브랜드</option>'+Object.keys(b).sort().map(n=>`<option ${n===selName?'selected':''}>${esc(n)}</option>`).join('');
+/* ---------- brand storage & management ---------- */
+const getBrands=()=>LS.get('ccs_brands',{});
+const putBrands=b=>{LS.set('ccs_brands',b);refreshBrands(editing)};
+let editing=LS.get('ccs_editing','')||'';let dirty=false;
+function setEditing(n){editing=n||'';LS.set('ccs_editing',editing);dirty=false;renderEditing()}
+function markDirty(){if(!dirty){dirty=true;renderEditing()}}
+function renderEditing(){
+  const el=$('#editing');if(!el)return;el.classList.toggle('dirty',dirty);
+  $('#editTxt').innerHTML=editing?`<b>${esc(editing)}</b> 수정 중`:'새 브랜드 작성 중';
+  $('#editSt').textContent=dirty?'저장 안 된 변경사항':(editing?'저장됨':'');
+  $('#saveBrand').textContent=editing?'변경사항 저장':'새 브랜드로 저장';$('#saveAsNew').hidden=!editing;
 }
-$('#brandList').onchange=e=>{const n=e.target.value;const b=LS.get('ccs_brands',{});setForm(n?b[n]:{});resetOut();};
-$('#saveBrand').onclick=()=>{const f=getForm();if(!f.brand)return toast('브랜드명을 입력하세요');const b=LS.get('ccs_brands',{});b[f.brand]=f;LS.set('ccs_brands',b);refreshBrands(f.brand);toast('브랜드 저장 완료')};
-$('#delBrand').onclick=()=>{const n=$('#brandList').value;if(!n)return;if(!confirm(`'${n}' 브랜드를 삭제할까요?`))return;const b=LS.get('ccs_brands',{});delete b[n];LS.set('ccs_brands',b);refreshBrands();setForm({});resetOut();toast('삭제했어요')};
-document.addEventListener('input',e=>{if(e.target.closest('main section:first-child'))saveDraft()});
+function refreshBrands(selName){
+  const b=getBrands();const s=$('#brandList');const names=Object.keys(b).sort((x,y)=>x.localeCompare(y,'ko'));
+  s.innerHTML='<option value="">+ 새 브랜드</option>'+names.map(n=>`<option ${n===selName?'selected':''}>${esc(n)}</option>`).join('');
+  $('#brandCnt').textContent=names.length;
+  if(!$('#viewBrands').hidden) renderMgr();
+}
+function loadBrand(n){
+  if(dirty&&!confirm('저장하지 않은 변경사항이 있어요. 그래도 불러올까요?')){refreshBrands(editing);return false}
+  const b=getBrands();setForm(n?b[n]:{});setEditing(n&&b[n]?n:'');refreshBrands(editing);resetOut();saveDraftOnly();return true;
+}
+$('#brandList').onchange=e=>loadBrand(e.target.value);
+function saveBrand(asNew){
+  if(asNew===true){const f0=getForm();if(f0.brand===editing){toast('새 브랜드로 저장하려면 브랜드명을 바꿔주세요');$('#brand').focus();return}editing='';}
+  const f=getForm();if(!f.brand){toast('브랜드명을 입력하세요');$('#brand').focus();return}
+  const b=getBrands();const now=new Date().toISOString();
+  if(b[f.brand]&&f.brand!==editing&&!confirm(`'${f.brand}' 브랜드가 이미 있어요. 덮어쓸까요?`))return;
+  const prev=b[editing]||b[f.brand]||{};
+  if(editing&&editing!==f.brand){ if(!confirm(`'${editing}' 브랜드 이름을 '${f.brand}'(으)로 바꿔 저장할까요?\n(새 브랜드로 따로 저장하려면 취소 후 '새 브랜드로 저장'을 누르세요)`))return; delete b[editing]; }
+  b[f.brand]={...f,createdAt:prev.createdAt||now,updatedAt:now};
+  putBrands(b);setEditing(f.brand);refreshBrands(f.brand);toast(prev.createdAt?'변경사항을 저장했어요':'새 브랜드로 저장했어요');
+}
+$('#saveBrand').onclick=()=>saveBrand();$('#saveAsNew').onclick=()=>saveBrand(true);
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='s'&&!$('#viewStudio').hidden){e.preventDefault();saveBrand()}});
+function saveDraftOnly(){LS.set('ccs_draft',getForm())}
+document.addEventListener('input',e=>{if(e.target.closest('#viewStudio main section:first-child'))saveDraft()});
+
+/* views */
+function showView(v){
+  $('#viewStudio').hidden=v!=='studio';$('#viewBrands').hidden=v!=='brands';
+  $('#tabStudio').classList.toggle('on',v==='studio');$('#tabBrands').classList.toggle('on',v==='brands');
+  if(v==='brands')renderMgr();window.scrollTo(0,0);LS.set('ccs_view',v);
+}
+$('#tabStudio').onclick=()=>showView('studio');$('#tabBrands').onclick=()=>showView('brands');
+$('#goMgr').onclick=e=>{e.preventDefault();showView('brands')};
+
+function fmtDate(iso){if(!iso)return '-';const d=new Date(iso);return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`}
+function demoOf(f){if(f.targetKw)return f.targetKw;const g=f.demo||{};const a=(g.ages||[]).map(x=>x==='60'?'60대+':x+'대').join('·');return [a,g.g].filter(Boolean).join(' ')||'-'}
+function renderMgr(){
+  const b=getBrands();const q=$('#mgrSearch').value.trim().toLowerCase();
+  const list=Object.values(b).filter(f=>!q||[f.brand,f.category,f.about].join(' ').toLowerCase().includes(q))
+    .sort((x,y)=>(y.updatedAt||'').localeCompare(x.updatedAt||''));
+  $('#mgrCount').textContent=`${Object.keys(b).length}개 브랜드${q?` · 검색 결과 ${list.length}개`:''}`;
+  if(!list.length){$('#mgrGrid').innerHTML=`<div class="empty" style="grid-column:1/-1">${q?'검색 결과가 없어요.':'아직 저장된 브랜드가 없어요.<br><b>+ 새 브랜드</b>로 시작하거나, 받은 JSON 파일을 <b>가져오기</b> 하세요.'}</div>`;return}
+  $('#mgrGrid').innerHTML=list.map(f=>{
+    const us=norm(f.usps).filter(u=>u.k||u.t), ps=norm(f.pps).filter(p=>p.k||p.t);
+    return `<div class="bcard" data-n="${esc(f.brand)}">
+      <div class="bh"><div><div class="bn">${esc(f.brand)}</div><div class="bm">${esc(f.category||'카테고리 없음')} · 톤 ${esc(f.tone||'친근')} · 수정 ${fmtDate(f.updatedAt)}</div></div>${f.brand===editing?'<span class="badge">스튜디오에서 수정 중</span>':''}</div>
+      ${f.about?`<div class="about">${esc(f.about)}</div>`:''}
+      <div class="row2"><b>USP ${us.length}</b><div class="chs">${us.map((u,i)=>`<span><i>${i+1}</i>${esc(u.k||u.t)}</span>`).join('')||'<span>-</span>'}</div></div>
+      <div class="row2"><b>타겟</b><div class="chs"><span>${esc(demoOf(f))}</span>${f.target?`<span>${esc(f.target)}</span>`:''}</div></div>
+      <div class="row2"><b>Pain Point ${ps.length}</b><div class="chs">${ps.map((p,i)=>`<span><i>${(p.u!=null?p.u:i)+1}-${i+1}</i>${esc(p.k||p.t)}</span>`).join('')||'<span>-</span>'}</div></div>
+      <div class="acts"><button class="btn sm" data-a="edit">수정하기</button><button class="btn ghost sm" data-a="dup">복제</button><button class="btn ghost sm del" data-a="del">삭제</button></div>
+    </div>`}).join('');
+  document.querySelectorAll('#mgrGrid .bcard button').forEach(btn=>btn.onclick=()=>{
+    const n=btn.closest('.bcard').dataset.n;const all=getBrands();const a=btn.dataset.a;
+    if(a==='edit'){if(loadBrand(n))showView('studio')}
+    else if(a==='dup'){let k=n+' 복사본',i=2;while(all[k])k=`${n} 복사본 ${i++}`;const now=new Date().toISOString();all[k]={...JSON.parse(JSON.stringify(all[n])),brand:k,createdAt:now,updatedAt:now};putBrands(all);toast(`'${k}'(으)로 복제했어요`)}
+    else if(a==='del'){if(!confirm(`'${n}' 브랜드를 삭제할까요? 되돌릴 수 없어요.`))return;delete all[n];putBrands(all);if(n===editing)setEditing('');toast('삭제했어요')}
+  });
+}
+$('#mgrSearch').oninput=renderMgr;
+$('#mgrNew').onclick=()=>{if(loadBrand(''))showView('studio');$('#brand').focus()};
+$('#mgrExport').onclick=()=>{
+  const b=getBrands();if(!Object.keys(b).length)return toast('내보낼 브랜드가 없어요');
+  const blob=new Blob([JSON.stringify({app:'concept-copy-studio',version:1,exportedAt:new Date().toISOString(),brands:b},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);const d=new Date();a.download=`브랜드_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;a.click();
+};
+$('#mgrImport').onclick=()=>$('#mgrFile').click();
+$('#mgrFile').onchange=async e=>{
+  const file=e.target.files[0];e.target.value='';if(!file)return;
+  try{
+    const j=JSON.parse(await file.text());const src=j.brands||j;
+    const items=Object.values(src).filter(f=>f&&typeof f==='object'&&f.brand);
+    if(!items.length)throw new Error();
+    const b=getBrands();const dup=items.filter(f=>b[f.brand]).map(f=>f.brand);
+    if(dup.length&&!confirm(`같은 이름의 브랜드 ${dup.length}개(${dup.slice(0,3).join(', ')}${dup.length>3?' 외':''})를 덮어쓸까요?\n취소하면 새 브랜드만 추가해요.`))items.splice(0,items.length,...items.filter(f=>!b[f.brand]));
+    items.forEach(f=>b[f.brand]={...f,updatedAt:f.updatedAt||new Date().toISOString()});
+    putBrands(b);toast(`${items.length}개 브랜드를 가져왔어요`);
+  }catch(x){toast('가져올 수 없는 파일이에요 (내보내기한 JSON만 가능)')}
+};
 
 /* ---------- mode ---------- */
 function setMode(m){mode=m;LS.set('ccs_mode',m);$('#mRule').classList.toggle('on',m==='rule');$('#mAI').classList.toggle('on',m==='ai');$('#aiSet').hidden=m!=='ai'}
@@ -646,9 +782,9 @@ $('#csv').onclick=()=>{
 };
 $('#sample').onclick=()=>{setForm({brand:'순면하루',category:'생리대',tone:'친근',about:'유기농 순면 커버와 무향 설계를 내세운 생리대 브랜드. 스마트스토어·자사몰 판매.',rules:'최상급(최고·1위) 표현 금지',
   usps:[{k:'유기농 순면 커버',t:'100% 유기농 순면 커버로 피부 자극 최소화'},{k:'향료·표백 제로',t:'향료·염소표백 없는 설계'}],demo:{g:'여성',ages:['20','30']},target:'민감한 피부의 직장인',
-  pps:[{k:'피부 트러블',t:'오래 착용하면 생기는 피부 트러블',u:0},{k:'냄새 걱정',t:'하루 종일 신경 쓰이는 냄새',u:1}]});resetOut();toast('예시를 채웠어요')};
+  pps:[{k:'피부 트러블',t:'오래 착용하면 생기는 피부 트러블',u:0},{k:'냄새 걱정',t:'하루 종일 신경 쓰이는 냄새',u:1}]});setEditing('');refreshBrands('');resetOut();saveDraftOnly();toast('예시를 채웠어요')};
 
-setMode(mode);refreshBrands();setForm(LS.get('ccs_draft',{}));
+setMode(mode);setForm(LS.get('ccs_draft',{}));if(editing&&!getBrands()[editing])editing='';refreshBrands(editing);dirty=false;renderEditing();showView(LS.get('ccs_view','studio'));
 })();
 </script>
 </body>
