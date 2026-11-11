@@ -464,14 +464,20 @@ function loadBrand(n){
 }
 $('#brandList').onchange=e=>loadBrand(e.target.value);
 function saveBrand(asNew){
-  if(asNew===true){const f0=getForm();if(f0.brand===editing){toast('새 브랜드로 저장하려면 브랜드명을 바꿔주세요');$('#brand').focus();return}editing='';}
   const f=getForm();if(!f.brand){toast('브랜드명을 입력하세요');$('#brand').focus();return}
+  const cur=asNew===true?'':editing;           // 새 브랜드 저장이면 기존 편집 대상과 분리
+  if(asNew===true&&f.brand===editing){toast('새 브랜드로 저장하려면 브랜드명을 바꿔주세요');$('#brand').focus();return}
   const b=getBrands();const now=new Date().toISOString();
-  if(b[f.brand]&&f.brand!==editing&&!confirm(`'${f.brand}' 브랜드가 이미 있어요. 덮어쓸까요?`))return;
-  const prev=b[editing]||b[f.brand]||{};
-  if(editing&&editing!==f.brand){ if(!confirm(`'${editing}' 브랜드 이름을 '${f.brand}'(으)로 바꿔 저장할까요?\n(새 브랜드로 따로 저장하려면 취소 후 '새 브랜드로 저장'을 누르세요)`))return; delete b[editing]; }
+  if(b[f.brand]&&f.brand!==cur&&!confirm(`'${f.brand}' 브랜드가 이미 있어요. 덮어쓸까요?`))return;
+  if(cur&&cur!==f.brand){ if(!confirm(`'${cur}' 브랜드 이름을 '${f.brand}'(으)로 바꿔 저장할까요?\n(새 브랜드로 따로 저장하려면 취소 후 '새 브랜드로 저장'을 누르세요)`))return; }
+  const prev=(cur&&b[cur])||b[f.brand]||{};
+  if(cur&&cur!==f.brand) delete b[cur];
   b[f.brand]={...f,createdAt:prev.createdAt||now,updatedAt:now};
-  putBrands(b);setEditing(f.brand);refreshBrands(f.brand);toast(prev.createdAt?'변경사항을 저장했어요':'새 브랜드로 저장했어요');
+  if(!cur){ // 새 브랜드로 저장 → 입력값 리셋
+    LS.set('ccs_brands',b);setForm({});setEditing('');refreshBrands('');resetOut();
+    toast(`'${f.brand}' 저장 완료 · 입력칸을 비웠어요`);window.scrollTo(0,0);return;
+  }
+  putBrands(b);setEditing(f.brand);refreshBrands(f.brand);toast('변경사항을 저장했어요');
 }
 $('#saveBrand').onclick=()=>saveBrand();$('#saveAsNew').onclick=()=>saveBrand(true);
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='s'&&!$('#viewStudio').hidden){e.preventDefault();saveBrand()}});
