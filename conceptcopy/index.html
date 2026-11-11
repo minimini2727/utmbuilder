@@ -51,9 +51,26 @@ textarea{resize:vertical;min-height:72px}
 .list{display:flex;flex-direction:column;gap:6px}
 .li{display:flex;gap:6px}
 .li input{flex:1}
-.li .kw{flex:0 0 38%;border-style:dashed;font-weight:700}
+.list .li{flex-wrap:wrap;row-gap:6px;padding-bottom:10px;border-bottom:1px dashed var(--line)}
+.list .li:last-child{border-bottom:0;padding-bottom:0}
+.list{gap:10px!important}
+.li .kw{flex:1;min-width:0;font-weight:700}
+.li .tx{order:5;flex:1 1 100%;min-width:0;font-size:13px;color:var(--sub)}
+#uspList .li .tx{margin-left:58px}
+.li .no{flex:0 0 52px;display:grid;place-items:center;border-radius:9px;background:var(--ink);color:var(--panel);font-size:12px;font-weight:800}
+.li .match{flex:0 0 76px;padding:9px 6px;font-weight:800;font-size:12.5px;color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+.li .pno{flex:0 0 40px;display:grid;place-items:center;font-size:12px;font-weight:800;color:var(--accent);border:1.5px dashed var(--accent);border-radius:9px}
 .lihead{display:flex;gap:6px;font-size:11px;color:var(--sub);margin:-2px 0 4px}
-.lihead span:first-child{flex:1}.lihead span:last-child{flex:0 0 calc(38% + 42px)}
+.lihead .h-no{flex:0 0 52px}.lihead .h-m{flex:0 0 76px}.lihead .h-p{flex:0 0 40px}
+.lihead .h-k{flex:1}.lihead .h-x{flex:0 0 36px}
+.demo{display:flex;flex-direction:column;gap:8px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid var(--line);background:var(--bg);color:var(--sub);border-radius:8px;padding:7px 11px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.seg button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.seg .lb{align-self:center;font-size:11.5px;font-weight:700;color:var(--sub);width:30px}
+.demokw{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--sub)}
+.demokw b{font-size:14px;color:var(--ink);background:var(--chip);border-radius:7px;padding:4px 10px}
+@media (max-width:600px){#uspList .li .tx{margin-left:50px}.li .no{flex-basis:44px}.lihead .h-no{flex-basis:44px}.li .match{flex-basis:72px;font-size:12px}.lihead .h-m{flex-basis:72px}.li .pno{flex-basis:34px}.lihead .h-p{flex-basis:34px}}
 .vp .kwv{font-size:21px;font-weight:800;letter-spacing:-.03em;margin:8px 0 6px}
 .vp .tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
 .vp .tags span{font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:2px 7px}
@@ -190,19 +207,23 @@ footer{max-width:1280px;margin:0 auto;padding:0 16px 30px;color:var(--sub);font-
   <div class="card">
     <div class="step"><b>2</b><h2>USP · 타겟 · Pain Point</h2></div>
     <label class="f">USP (브랜드만의 강점) <em>*</em></label>
-    <div class="lihead"><span>설명</span><span>키워드 (카피에 사용)</span></div>
+    <div class="lihead"><span class="h-no">번호</span><span class="h-k">키워드 → 설명 순</span><span class="h-x"></span></div>
     <div class="list" id="uspList"></div>
     <button class="add" data-add="usp">+ USP 추가</button>
 
     <label class="f">타겟 <em>*</em></label>
-    <div class="lihead"><span>설명</span><span>키워드</span></div>
-    <div class="li"><input type="text" id="target" placeholder="예: 민감한 피부의 2030 직장인 여성"><input type="text" id="targetKw" class="kw" placeholder="민감 피부 직장인"><span style="width:36px"></span></div>
+    <div class="demo">
+      <div class="seg" id="gender"><span class="lb">성별</span><button data-v="여성">여성</button><button data-v="남성">남성</button><button data-v="">전체</button></div>
+      <div class="seg" id="ages"><span class="lb">연령</span><button data-v="10">10대</button><button data-v="20">20대</button><button data-v="30">30대</button><button data-v="40">40대</button><button data-v="50">50대</button><button data-v="60">60대+</button></div>
+      <div class="demokw">데모 타겟 키워드 <b id="demoKw">성별·연령을 선택하세요</b></div>
+      <input type="text" id="target" placeholder="설명 (선택) — 예: 패션에 관심 많은 직장인">
+    </div>
 
     <label class="f">타겟 Pain Point <em>*</em></label>
-    <div class="lihead"><span>설명</span><span>키워드 (카피에 사용)</span></div>
+    <div class="lihead"><span class="h-m">매칭 USP</span><span class="h-p">번호</span><span class="h-k">키워드 → 설명 순</span><span class="h-x"></span></div>
     <div class="list" id="ppList"></div>
     <button class="add" data-add="pp">+ Pain Point 추가</button>
-    <div class="hint">설명을 쓰면 키워드가 자동으로 잡혀요. 어색하면 키워드 칸만 고쳐주세요.</div>
+    <div class="hint">P.P마다 해결해 줄 USP를 고르면 [USP 번호]-[P.P 번호]로 짝지어져요 (예: 1-1, 2-2). VP는 이 매칭 쌍마다 1개씩 만들어져요.</div>
 
     <div id="aiSet" hidden>
       <div class="aibox">
@@ -233,7 +254,7 @@ footer{max-width:1280px;margin:0 auto;padding:0 16px 30px;color:var(--sub);font-
       <ul>
         <li>VP(Value Proposition) = 타겟의 Pain Point를 브랜드 USP로 해결해 주는 약속</li>
         <li>VP는 한눈에 읽히는 키워드형(예: 트러블 없는 유기농 순면)과 해시태그 3개로 정리돼요</li>
-        <li>USP × Pain Point 키워드 조합별로 VP 후보를 만들고, 1개를 골라 컨셉 카피 10개로 확장</li>
+        <li>P.P마다 매칭한 USP와 짝지어(1-1, 2-2 …) 쌍마다 VP를 1개씩 만들고, 1개를 골라 컨셉 카피 10개로 확장</li>
         <li>카피는 메인 15자·서브 20자 이내를 목표로(내부 권장값) 소구 각도를 모두 다르게 구성해 A/B 테스트에 바로 쓰기 좋게 했어요</li>
         <li>카드의 메인/서브 카피는 클릭해서 바로 수정할 수 있어요</li>
       </ul>
@@ -279,54 +300,75 @@ const MAIN_MAX=15, SUB_MAX=20;
 let mode=LS.get('ccs_mode','rule');
 let vps=[]; let sel=0; let copies=[]; let seed=0;
 
-/* ---------- keyword extraction (heuristic) ---------- */
-const GENERIC=/^(설계|제품|방식|구조|기술|시스템|공법|서비스|기능|구성|라인)$/;
-const MOD=/(는|은|던|한|운|된|진|할|될|하면|으면|되면|라면|이면|하며|의)$/;
-function kwOf(raw,kind){
-  let t=String(raw||'').trim().split(/\s+/).filter(Boolean);
-  if(!t.length) return '';
-  if(kind!=='target' && t.length>1 && GENERIC.test(t[t.length-1])) t.pop();
-  const last=t[t.length-1];
-  if(t.length>1 && /없는$/.test(last)){ t[t.length-1]='제로'; }
-  else if(t.length>1 && MOD.test(last)){ t[t.length-1]=last.replace(/(한|운|된|진|은|는)$/,'') || last; }
-  else{
-    let idx=-1; for(let i=0;i<t.length-1;i++) if(MOD.test(t[i])) idx=i;
-    if(idx>=0) t=t.slice(idx+1);
-  }
-  while(t.join(' ').length>12 && t.length>1) t.shift();
-  return t.join(' ');
-}
 const tag=x=>'#'+String(x).replace(/[\s·,./]+/g,'');
 
-/* ---------- list inputs ---------- */
-function addItem(kind,val='',kw=''){
+/* ---------- list inputs (keyword first, no auto-fill) ---------- */
+function rowHTML(kind){
+  const ph=kind==='usp'?['키워드 예: 유기농 순면','설명 예: 100% 유기농 순면 커버로 자극 최소화']:['키워드 예: 피부 트러블','설명 예: 오래 착용하면 생기는 피부 트러블'];
+  const lead=kind==='usp'?'<span class="no"></span>':'<select class="match" title="매칭 USP"></select><span class="pno"></span>';
+  return `${lead}<input type="text" class="kw" placeholder="${ph[0]}"><input type="text" class="tx" placeholder="${ph[1]}"><button class="x" title="삭제">×</button>`;
+}
+function addItem(kind,t='',k='',u){
   const wrap=$(kind==='usp'?'#uspList':'#ppList');
-  const d=document.createElement('div');d.className='li';
-  d.innerHTML=`<input type="text" class="tx" placeholder="${kind==='usp'?'예: 100% 유기농 순면 커버':'예: 오래 착용하면 생기는 피부 트러블'}"><input type="text" class="kw" placeholder="${kind==='usp'?'유기농 순면':'피부 트러블'}"><button class="x" title="삭제">×</button>`;
-  const tx=d.querySelector('.tx'),k=d.querySelector('.kw');
-  tx.value=val;k.value=kw||kwOf(val,kind);k.dataset.auto=kw?'0':'1';
-  tx.oninput=()=>{if(k.dataset.auto==='1')k.value=kwOf(tx.value,kind)};
-  k.oninput=()=>{k.dataset.auto=k.value?'0':'1'};
-  d.querySelector('.x').onclick=()=>{if(wrap.children.length>1)d.remove();else{tx.value='';k.value='';k.dataset.auto='1'}};
-  wrap.appendChild(d);
+  const d=document.createElement('div');d.className='li';d.innerHTML=rowHTML(kind);
+  d.querySelector('.kw').value=k;d.querySelector('.tx').value=t;
+  if(kind==='pp'){const n=wrap.children.length;d.dataset.u=(u!=null?u:n);}
+  d.querySelector('.x').onclick=()=>{if(wrap.children.length>1)d.remove();else{d.querySelector('.kw').value='';d.querySelector('.tx').value=''}renumber();saveDraft()};
+  wrap.appendChild(d);renumber();
+}
+function renumber(){
+  const ur=[...document.querySelectorAll('#uspList .li')];
+  ur.forEach((r,i)=>r.querySelector('.no').textContent='USP '+(i+1));
+  const nU=Math.max(ur.length,1);
+  [...document.querySelectorAll('#ppList .li')].forEach((r,i)=>{
+    const sel=r.querySelector('.match');let u=Math.min(+r.dataset.u||0,nU-1);r.dataset.u=u;
+    sel.innerHTML=ur.map((_,j)=>`<option value="${j}">USP ${j+1}</option>`).join('')||'<option value="0">USP 1</option>';
+    sel.value=String(u);
+    sel.onchange=()=>{r.dataset.u=sel.value;renumber();saveDraft()};
+    r.querySelector('.pno').textContent=`${u+1}-${i+1}`;
+  });
 }
 document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>addItem(b.dataset.add));
-const items=id=>[...document.querySelectorAll(id+' .li')].map(r=>{const t=r.querySelector('.tx').value.trim();const k=r.querySelector('.kw').value.trim()||t;return {t,k}}).filter(x=>x.t||x.k);
-$('#targetKw').dataset.auto='1';
-$('#target').addEventListener('input',()=>{if($('#targetKw').dataset.auto==='1')$('#targetKw').value=kwOf($('#target').value,'target')});
-$('#targetKw').addEventListener('input',e=>{e.target.dataset.auto=e.target.value?'0':'1'});
+const usps=()=>[...document.querySelectorAll('#uspList .li')].map(r=>({k:r.querySelector('.kw').value.trim(),t:r.querySelector('.tx').value.trim()}));
+const pps=()=>[...document.querySelectorAll('#ppList .li')].map((r,i)=>({k:r.querySelector('.kw').value.trim(),t:r.querySelector('.tx').value.trim(),u:+r.dataset.u,no:i+1}));
+
+/* ---------- demo target ---------- */
+let demo={g:null,ages:[]};
+function demoKw(){
+  const a=[...demo.ages].map(Number).sort((x,y)=>x-y);let age='';
+  const lab=n=>n===60?'60대+':n+'대';
+  if(a.length===6) age='전 연령';
+  else if(a.length===1) age=lab(a[0]);
+  else if(a.length>1){
+    const cons=a.every((v,i)=>!i||v-a[i-1]===10);
+    if(cons&&a.length===2&&a[1]!==60) age=`${a[0]}${a[1]}`;
+    else if(cons) age=`${a[0]}~${lab(a[a.length-1])}`;
+    else age=a.map(lab).join('·');
+  }
+  const g=demo.g||'';
+  return [age,g].filter(Boolean).join(' ')||(demo.g===''&&!age?'전체':'');
+}
+function renderDemo(){
+  document.querySelectorAll('#gender button').forEach(b=>b.classList.toggle('on',demo.g!==null&&b.dataset.v===demo.g));
+  document.querySelectorAll('#ages button').forEach(b=>b.classList.toggle('on',demo.ages.includes(b.dataset.v)));
+  $('#demoKw').textContent=demoKw()||'성별·연령을 선택하세요';
+}
+document.querySelectorAll('#gender button').forEach(b=>b.onclick=()=>{demo.g=b.dataset.v;renderDemo();saveDraft()});
+document.querySelectorAll('#ages button').forEach(b=>b.onclick=()=>{const v=b.dataset.v;demo.ages=demo.ages.includes(v)?demo.ages.filter(x=>x!==v):[...demo.ages,v];renderDemo();saveDraft()});
+function saveDraft(){LS.set('ccs_draft',getForm())}
 
 function getForm(){
-  const target=$('#target').value.trim();
   return {brand:$('#brand').value.trim(),category:$('#category').value.trim(),tone:$('#tone').value,about:$('#about').value.trim(),rules:$('#rules').value.trim(),
-    usps:items('#uspList'),target,targetKw:$('#targetKw').value.trim()||kwOf(target,'target'),pps:items('#ppList')};
+    usps:usps(),demo:{g:demo.g,ages:[...demo.ages]},targetKw:demoKw(),target:$('#target').value.trim(),pps:pps()};
 }
 const norm=a=>(a||[]).map(x=>typeof x==='string'?{t:x,k:''}:x);
 function setForm(f){
   $('#brand').value=f.brand||'';$('#category').value=f.category||'';$('#tone').value=f.tone||'친근·대화체';$('#about').value=f.about||'';$('#rules').value=f.rules||'';
-  $('#target').value=f.target||'';$('#targetKw').value=f.targetKw||kwOf(f.target,'target');$('#targetKw').dataset.auto=f.targetKw?'0':'1';
+  demo=f.demo?{g:f.demo.g??null,ages:[...(f.demo.ages||[])]}:{g:null,ages:[]};renderDemo();
+  $('#target').value=f.target||'';
   $('#uspList').innerHTML='';const u=norm(f.usps);(u.length?u:[{t:'',k:''}]).forEach(v=>addItem('usp',v.t,v.k));
-  $('#ppList').innerHTML='';const p=norm(f.pps);(p.length?p:[{t:'',k:''}]).forEach(v=>addItem('pp',v.t,v.k));
+  $('#ppList').innerHTML='';const p=norm(f.pps);(p.length?p:[{t:'',k:''}]).forEach((v,i)=>addItem('pp',v.t,v.k,v.u!=null?v.u:i));
+  renumber();
 }
 
 /* ---------- brand storage ---------- */
@@ -337,7 +379,7 @@ function refreshBrands(selName){
 $('#brandList').onchange=e=>{const n=e.target.value;const b=LS.get('ccs_brands',{});setForm(n?b[n]:{});resetOut();};
 $('#saveBrand').onclick=()=>{const f=getForm();if(!f.brand)return toast('브랜드명을 입력하세요');const b=LS.get('ccs_brands',{});b[f.brand]=f;LS.set('ccs_brands',b);refreshBrands(f.brand);toast('브랜드 저장 완료')};
 $('#delBrand').onclick=()=>{const n=$('#brandList').value;if(!n)return;if(!confirm(`'${n}' 브랜드를 삭제할까요?`))return;const b=LS.get('ccs_brands',{});delete b[n];LS.set('ccs_brands',b);refreshBrands();setForm({});resetOut();toast('삭제했어요')};
-document.addEventListener('input',e=>{if(e.target.closest('main section:first-child'))LS.set('ccs_draft',getForm())});
+document.addEventListener('input',e=>{if(e.target.closest('main section:first-child'))saveDraft()});
 
 /* ---------- mode ---------- */
 function setMode(m){mode=m;LS.set('ccs_mode',m);$('#mRule').classList.toggle('on',m==='rule');$('#mAI').classList.toggle('on',m==='ai');$('#aiSet').hidden=m!=='ai'}
@@ -365,22 +407,13 @@ const VP_PATTERNS=[
   (u,p)=>`${p}엔 ${u}`,
   (u,p)=>`${J.로(u)} ${p} 끝`
 ];
+function pairs(f){
+  return f.pps.map(p=>{const u=f.usps[p.u]||f.usps[0];return {u:{k:u.k||u.t,t:u.t},p:{k:p.k||p.t,t:p.t},ui:p.u,no:p.no,pair:`${p.u+1}-${p.no}`}}).filter(x=>x.u.k&&x.p.k);
+}
 function ruleVPs(f){
-  const out=[];
-  f.usps.forEach((u,ui)=>f.pps.forEach((p,pi)=>{
-    VP_PATTERNS.forEach((fn,k)=>out.push({
-      kw:fn(u.k,p.k), tags:[tag(u.k),tag(p.k+'해결'),tag(f.brand)],
-      stmt:`${J.이(f.targetKw)} 겪는 ${J.을(p.k)} ${J.로(u.k)} 해결하는 ${f.brand}`,
-      usp:u.k,pp:p.k,why:`USP ${ui+1} × P.P ${pi+1} 조합`
-    }));
-  }));
-  const combos=[];f.usps.forEach(u=>f.pps.forEach(p=>combos.push([u,p])));
-  const res=[];const seen=new Set();
-  for(let i=0;res.length<3&&i<combos.length*3;i++){
-    const ci=(seed+i)%combos.length, pi=(seed+i)%3;
-    const v=out[ci*3+pi]; if(!seen.has(v.kw)){seen.add(v.kw);res.push(v)}
-  }
-  return res;
+  return pairs(f).map((x,i)=>{const fn=VP_PATTERNS[(i+seed)%VP_PATTERNS.length];return {
+    pair:x.pair,kw:fn(x.u.k,x.p.k),tags:[tag(x.u.k),tag(x.p.k+'해결'),tag(f.brand)],
+    stmt:`${J.이(f.targetKw)} 겪는 ${J.을(x.p.k)} ${J.로(x.u.k)} 해결하는 ${f.brand}`,usp:x.u.k,pp:x.p.k}});
 }
 const ANGLES=[
   ['문제제기',(v,f)=>[`아직도 ${v.pp}?`,`${J.로(v.usp)} 바꿔보세요`,'익숙한 불편을 짚어 스크롤을 멈추게 함']],
@@ -410,23 +443,24 @@ async function callClaude(prompt){
   return JSON.parse(m[0]);
 }
 function brief(f){
-  return `[브랜드명] ${f.brand}\n[카테고리] ${f.category||'-'}\n[톤앤매너] ${f.tone}\n[브랜드 소개] ${f.about||'-'}\n[필수/금지 표현] ${f.rules||'-'}\n[USP]\n${f.usps.map((u,i)=>`${i+1}. ${u.t} (키워드: ${u.k})`).join('\n')}\n[타겟] ${f.target} (키워드: ${f.targetKw})\n[Pain Point]\n${f.pps.map((p,i)=>`${i+1}. ${p.t} (키워드: ${p.k})`).join('\n')}`;
+  return `[브랜드명] ${f.brand}\n[카테고리] ${f.category||'-'}\n[톤앤매너] ${f.tone}\n[브랜드 소개] ${f.about||'-'}\n[필수/금지 표현] ${f.rules||'-'}\n[USP]\n${f.usps.map((u,i)=>`USP ${i+1}. ${u.k||u.t}${u.t?' — '+u.t:''}`).join('\n')}\n[타겟] ${f.targetKw}${f.target?' — '+f.target:''}\n[USP × Pain Point 매칭]\n${pairs(f).map(x=>`${x.pair}: USP ${x.ui+1}(${x.u.k}) × P.P ${x.no}(${x.p.k}${x.p.t?' — '+x.p.t:''})`).join('\n')}`;
 }
 async function aiVPs(f){
-  const p=`당신은 한국 퍼포먼스 마케팅 대행사의 시니어 카피라이터입니다. 아래 브랜드 정보로 VP(Value Proposition) 후보 3개를 "키워드형"으로 만드세요.
+  const p=`당신은 한국 퍼포먼스 마케팅 대행사의 시니어 카피라이터입니다. 아래 [USP × Pain Point 매칭] 쌍마다 VP(Value Proposition)를 1개씩 "키워드형"으로 만드세요.
 규칙:
 - kw: VP를 압축한 키워드 문구, 공백 포함 12자 이내 (예: "트러블 없는 순면", "순면으로 하루 편안"). 문장형·서술형 금지
 - tags: VP를 대표하는 해시태그 3개 (각 8자 이내, # 포함)
 - stmt: "[타겟]이 겪는 [P.P]를 [USP]로 해결하는 [브랜드]" 구조의 한 줄 정의
-- usp, pp: 사용한 USP·Pain Point 키워드
-- why: 이 VP가 설득력 있는 이유 15자 내외
-- 3개는 서로 다른 USP×P.P 조합 또는 다른 관점
+- pair: 매칭 번호 그대로 (예: "1-1")
+- 반드시 해당 쌍의 USP와 P.P만 결합할 것 (다른 쌍과 섞지 말 것)
 - 필수/금지 표현 준수, 근거 없는 최상급·효능 단정 금지
 JSON만 출력:
-{"vps":[{"kw":"","tags":["#",""],"stmt":"","usp":"","pp":"","why":""}]}
+{"vps":[{"pair":"1-1","kw":"","tags":["#",""],"stmt":""}]}
 
 ${brief(f)}`;
-  const j=await callClaude(p); return (j.vps||[]).slice(0,3).map(v=>({...v,tags:(v.tags||[]).map(t=>t.startsWith('#')?t:'#'+t)}));
+  const j=await callClaude(p);const ps=pairs(f);
+  return ps.map((x,i)=>{const v=(j.vps||[]).find(a=>String(a.pair)===x.pair)||(j.vps||[])[i]||{};
+    return {pair:x.pair,kw:v.kw||'',tags:(v.tags||[]).map(t=>t.startsWith('#')?t:'#'+t),stmt:v.stmt||'',usp:x.u.k,pp:x.p.k}}).filter(v=>v.kw);
 }
 async function aiCopies(v,f){
   const p=`당신은 한국 퍼포먼스 마케팅 대행사의 시니어 카피라이터입니다. 선택된 VP 1개로 배너·피드 광고 소재에 바로 올릴 컨셉 카피 10개를 만드세요.
@@ -452,7 +486,7 @@ ${brief(f)}`;
 function resetOut(){vps=[];copies=[];$('#vpOut').innerHTML='<div class="empty">왼쪽에 USP · 타겟 · Pain Point를 입력하고<br><b>VP 자동 생성</b>을 눌러주세요.</div>';$('#vpBar').hidden=true;$('#copyCard').hidden=true}
 function renderVPs(){
   $('#vpOut').innerHTML=vps.map((v,i)=>`<div class="vp ${i===sel?'on':''}" data-i="${i}"><span class="radio"></span>
-    <span class="tag">VP ${i+1}</span><span class="tag">USP: ${esc(v.usp)}</span><span class="tag">P.P: ${esc(v.pp)}</span>
+    <span class="tag">VP ${esc(v.pair||i+1)}</span><span class="tag">USP: ${esc(v.usp)}</span><span class="tag">P.P: ${esc(v.pp)}</span>
     <div class="kwv">${esc(v.kw)}</div><div class="tags">${(v.tags||[]).map(t=>`<span>${esc(t)}</span>`).join('')}</div>
     <div class="stmt">${esc(v.stmt)}</div></div>`).join('')+
     `<label class="f">선택한 VP 키워드 다듬기</label><input type="text" id="vpEdit" class="vpedit">`;
@@ -480,7 +514,7 @@ function renderCopies(){
 
 /* ---------- actions ---------- */
 function validate(f,errEl){
-  const miss=[];if(!f.brand)miss.push('브랜드명');if(!f.usps.length)miss.push('USP');if(!f.target&&!f.targetKw)miss.push('타겟');if(!f.pps.length)miss.push('Pain Point');
+  const miss=[];if(!f.brand)miss.push('브랜드명');if(!f.usps.some(u=>u.k||u.t))miss.push('USP 키워드');if(!f.targetKw)miss.push('타겟 성별·연령');if(!pairs(f).length)miss.push('Pain Point 키워드');
   if(miss.length){errEl.textContent=miss.join(', ')+'을(를) 입력하세요';errEl.hidden=false;return false}errEl.hidden=true;return true;
 }
 async function busy(btn,label,fn){const o=btn.innerHTML;btn.disabled=true;btn.innerHTML=`<span class="spin"></span>${label}`;try{await fn()}finally{btn.disabled=false;btn.innerHTML=o}}
@@ -512,7 +546,8 @@ $('#csv').onclick=()=>{
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${f.brand||'brand'}_컨셉카피.csv`;a.click();
 };
 $('#sample').onclick=()=>{setForm({brand:'순면하루',category:'생리대',tone:'친근·대화체',about:'유기농 순면 커버와 무향 설계를 내세운 생리대 브랜드. 스마트스토어·자사몰 판매.',rules:'최상급(최고·1위) 표현 금지',
-  usps:[{t:'100% 유기농 순면 커버',k:''},{t:'향료·염소표백 없는 설계',k:''}],target:'민감한 피부의 2030 직장인 여성',pps:[{t:'오래 착용하면 생기는 피부 트러블',k:''},{t:'하루 종일 신경 쓰이는 답답함',k:''}]});resetOut();toast('예시를 채웠어요')};
+  usps:[{k:'유기농 순면 커버',t:'100% 유기농 순면 커버로 피부 자극 최소화'},{k:'향료·표백 제로',t:'향료·염소표백 없는 설계'}],demo:{g:'여성',ages:['20','30']},target:'민감한 피부의 직장인',
+  pps:[{k:'피부 트러블',t:'오래 착용하면 생기는 피부 트러블',u:0},{k:'냄새 걱정',t:'하루 종일 신경 쓰이는 냄새',u:1}]});resetOut();toast('예시를 채웠어요')};
 
 setMode(mode);refreshBrands();setForm(LS.get('ccs_draft',{}));
 })();
