@@ -193,10 +193,34 @@ main{padding-top:16px!important}
 .bcard .acts .btn{flex:1}
 .bcard .acts .del{flex:0 0 auto;color:var(--warn)}
 .mgr-note{font-size:12px;color:var(--sub);margin-top:16px}
+.lg{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
+.lg-card{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:28px 24px;box-shadow:var(--shadow)}
+.lg-card .logo{font-size:20px;margin-bottom:4px}
+.lg-card p{margin:0 0 18px;font-size:13px;color:var(--sub)}
+.lg-card .btn{width:100%;margin-top:16px;padding:12px}
+.lg-card .chk{display:flex;align-items:center;gap:6px;margin-top:12px;font-size:12.5px;color:var(--sub)}
+.lg-card .err{text-align:center}
+body:not(.authed) #app{display:none}
+body.authed #login{display:none}
+.logout{border:1px solid var(--line);background:transparent;color:var(--sub);border-radius:9px;padding:6px 11px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
 footer{max-width:1280px;margin:0 auto;padding:0 16px 30px;color:var(--sub);font-size:12px}
 </style>
 </head>
 <body>
+<section class="lg" id="login" aria-label="로그인">
+  <form class="lg-card" id="loginForm" autocomplete="on">
+    <div class="logo">Concept<span>.</span>Copy Studio</div>
+    <p>로그인 후 이용할 수 있어요.</p>
+    <label class="f" for="lgId">아이디</label>
+    <input type="text" id="lgId" autocomplete="username" autocapitalize="off" spellcheck="false" required>
+    <label class="f" for="lgPw">비밀번호</label>
+    <input type="password" id="lgPw" autocomplete="current-password" required>
+    <label class="chk"><input type="checkbox" id="lgKeep"> 이 브라우저에서 로그인 유지</label>
+    <button class="btn" type="submit" id="lgBtn">로그인</button>
+    <div class="err" id="lgErr" hidden></div>
+  </form>
+</section>
+<div id="app">
 <header class="top">
   <div class="top-in">
     <div class="logo">Concept<span>.</span>Copy Studio</div>
@@ -205,6 +229,7 @@ footer{max-width:1280px;margin:0 auto;padding:0 16px 30px;color:var(--sub);font-
       <button id="tabBrands">브랜드 관리 <span class="cnt" id="brandCnt">0</span></button>
     </nav>
     <div class="top-sp"></div>
+    <button class="logout" id="logout" type="button">로그아웃</button>
   </div>
 </header>
 
@@ -337,8 +362,31 @@ footer{max-width:1280px;margin:0 auto;padding:0 16px 30px;color:var(--sub);font-
   <div class="mgr-note">브랜드는 이 브라우저에만 저장돼요. 다른 PC·팀원과 쓰려면 <b>내보내기</b>로 받은 JSON 파일을 상대 브라우저에서 <b>가져오기</b> 하세요 (같은 이름은 덮어쓰기 전에 확인해요).</div>
 </section>
 <footer>입력값은 페이지에 들어올 때마다 비워져요. 저장한 브랜드는 이 브라우저에 보관되며 '브랜드 관리'에서 불러올 수 있어요. 생성된 카피는 초안이므로 광고 심의 기준(최상급·효능 표현 등)을 꼭 확인한 뒤 사용하세요.</footer>
+</div>
 <div class="toast" id="toast"></div>
 
+<script>
+/* 로그인 — 정적 페이지용 접근 제한(화면 잠금). 비밀번호는 평문 대신 SHA-256 해시로만 비교 */
+(()=>{
+  const HASH='d912e658d04b2f015366851c197bc11e876b1d31704434ac38fe426d3e0350db', KEY='ccs_auth';
+  const $=s=>document.querySelector(s);
+  const get=st=>{try{return st.getItem(KEY)}catch(e){return null}};
+  const set=(st,v)=>{try{v==null?st.removeItem(KEY):st.setItem(KEY,v)}catch(e){}};
+  const ok=()=>get(sessionStorage)===HASH||get(localStorage)===HASH;
+  const show=()=>{document.body.classList.toggle('authed',ok());if(!ok())setTimeout(()=>$('#lgId').focus(),0)};
+  async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+  let fails=0,lockUntil=0;
+  $('#loginForm').addEventListener('submit',async e=>{
+    e.preventDefault();const err=$('#lgErr');
+    if(Date.now()<lockUntil){err.textContent=`잠시 후 다시 시도하세요 (${Math.ceil((lockUntil-Date.now())/1000)}초)`;err.hidden=false;return}
+    let h='';try{h=await sha($('#lgId').value.trim()+':'+$('#lgPw').value)}catch(x){err.textContent='이 브라우저에서는 로그인할 수 없어요 (https 주소로 접속하세요)';err.hidden=false;return}
+    if(h===HASH){set(sessionStorage,HASH);set(localStorage,$('#lgKeep').checked?HASH:null);$('#lgPw').value='';err.hidden=true;fails=0;show();window.scrollTo(0,0)}
+    else{fails++;if(fails>=5){lockUntil=Date.now()+30000;fails=0}err.textContent='아이디 또는 비밀번호가 맞지 않아요';err.hidden=false;$('#lgPw').value='';$('#lgPw').focus()}
+  });
+  $('#logout').addEventListener('click',()=>{set(sessionStorage,null);set(localStorage,null);$('#lgId').value='';show()});
+  show();
+})();
+</script>
 <script>
 (()=>{
 const $=s=>document.querySelector(s);
