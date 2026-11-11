@@ -100,6 +100,15 @@ textarea{resize:vertical;min-height:72px}
 .vp .fml span{background:var(--chip);border-radius:6px;padding:2px 7px}
 .vp .fml em{font-style:normal;font-weight:800;color:var(--accent)}
 .vp .mean{font-size:12.5px;color:var(--sub);line-height:1.5}
+.tonebox{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
+.tonebox .lbl{font-size:12.5px;font-weight:700;color:var(--sub);margin-bottom:8px}
+.tones{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}@media (max-width:600px){.tones{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tones button{text-align:left;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:9px 11px;cursor:pointer;font:inherit}
+.tones button b{display:block;font-size:13.5px}
+.tones button small{display:block;font-size:11.5px;color:var(--sub);margin-top:2px}
+.tones button i{display:block;font-style:normal;font-size:12px;color:var(--sub);margin-top:5px;border-top:1px dashed var(--line);padding-top:5px}
+.tones button.on{border-color:var(--accent);background:var(--accent-soft)}
+.tones button.on b{color:var(--accent)}
 .vpnote{font-size:12px;color:var(--sub);margin-top:12px}
 .vp.on{border-color:var(--accent);background:var(--accent-soft)}
 .vp .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;background:var(--chip);color:var(--sub);margin-right:4px}
@@ -200,14 +209,7 @@ footer{max-width:1280px;margin:0 auto;padding:0 16px 30px;color:var(--sub);font-
     <div class="step"><b>1</b><h2>브랜드 정보</h2><small>소재 작성 시 참고</small></div>
     <label class="f">브랜드명 <em>*</em></label>
     <input type="text" id="brand" placeholder="예: 순면하루">
-    <div class="row">
-      <div><label class="f">카테고리</label><input type="text" id="category" placeholder="예: 생리대"></div>
-      <div><label class="f">톤앤매너</label>
-        <select id="tone">
-          <option>친근·대화체</option><option>전문·신뢰</option><option>감성·서정</option><option>위트·도발</option><option>간결·직설</option>
-        </select>
-      </div>
-    </div>
+    <label class="f">카테고리</label><input type="text" id="category" placeholder="예: 생리대">
     <label class="f">브랜드 소개</label>
     <textarea id="about" placeholder="브랜드 철학, 제품 특징, 가격대, 판매 채널 등 소재 작성 시 참고할 내용"></textarea>
     <label class="f">필수 표기 / 금지 표현</label>
@@ -277,6 +279,10 @@ footer{max-width:1280px;margin:0 auto;padding:0 16px 30px;color:var(--sub);font-
   <div class="card">
     <div class="sechead"><h3>STEP 3 · VP 후보</h3><span class="sp"></span><span class="hint" id="vpHint">매칭 쌍마다 컨셉 3개 · 1개를 선택하세요</span></div>
     <div id="vpOut"><div class="empty">왼쪽에 USP · 타겟 · Pain Point를 입력하고<br><b>VP 자동 생성</b>을 눌러주세요.</div></div>
+    <div class="tonebox" id="toneBox" hidden>
+      <div class="lbl">카피 톤앤무드 — 선택한 톤으로 카피 10개가 만들어져요</div>
+      <div class="tones" id="tones"></div>
+    </div>
     <div class="bar" id="vpBar" hidden>
       <button class="btn wide" id="genCopy">선택한 VP로 컨셉 카피 10개 뽑기</button>
       <button class="btn ghost" id="regenVP">VP 다시 생성</button>
@@ -368,12 +374,12 @@ document.querySelectorAll('#ages button').forEach(b=>b.onclick=()=>{const v=b.da
 function saveDraft(){LS.set('ccs_draft',getForm())}
 
 function getForm(){
-  return {brand:$('#brand').value.trim(),category:$('#category').value.trim(),tone:$('#tone').value,about:$('#about').value.trim(),rules:$('#rules').value.trim(),
+  return {brand:$('#brand').value.trim(),category:$('#category').value.trim(),tone:tone,about:$('#about').value.trim(),rules:$('#rules').value.trim(),
     usps:usps(),demo:{g:demo.g,ages:[...demo.ages]},targetKw:demoKw(),target:$('#target').value.trim(),pps:pps()};
 }
 const norm=a=>(a||[]).map(x=>typeof x==='string'?{t:x,k:''}:x);
 function setForm(f){
-  $('#brand').value=f.brand||'';$('#category').value=f.category||'';$('#tone').value=f.tone||'친근·대화체';$('#about').value=f.about||'';$('#rules').value=f.rules||'';
+  $('#brand').value=f.brand||'';$('#category').value=f.category||'';tone=TONES[f.tone]?f.tone:'친근';renderTones();$('#about').value=f.about||'';$('#rules').value=f.rules||'';
   demo=f.demo?{g:f.demo.g??null,ages:[...(f.demo.ages||[])]}:{g:null,ages:[]};renderDemo();
   $('#target').value=f.target||'';
   $('#uspList').innerHTML='';const u=norm(f.usps);(u.length?u:[{t:'',k:''}]).forEach(v=>addItem('usp',v.t,v.k));
@@ -408,7 +414,7 @@ function hasBatchim(w){
 function rieul(w){const s=String(w).trim();const c=s.charCodeAt(s.length-1);return c>=0xAC00&&c<=0xD7A3&&(c-0xAC00)%28===8}
 const J={
   을:w=>w+(hasBatchim(w)?'을':'를'), 이:w=>w+(hasBatchim(w)?'이':'가'), 은:w=>w+(hasBatchim(w)?'은':'는'),
-  로:w=>w+(hasBatchim(w)&&!rieul(w)?'으로':'로'), 이라면:w=>w+(hasBatchim(w)?'이라면':'라면')
+  로:w=>w+(hasBatchim(w)&&!rieul(w)?'으로':'로'), 과:w=>w+(hasBatchim(w)?'과':'와'), 이라면:w=>w+(hasBatchim(w)?'이라면':'라면')
 };
 
 /* ---------- rule engine ---------- */
@@ -467,19 +473,45 @@ function ruleVPs(f){
     stmt:`${J.이(f.targetKw)} 겪는 ${J.을(x.p.k)} ${J.로(x.u.k)} 해결하는 '${c.kw}'`})));
   return res;
 }
-const ANGLES=[
-  ['문제제기',(v,f)=>[`아직도 ${v.pp}?`,`${J.로(v.usp)} 바꿔보세요`,'익숙한 불편을 짚어 스크롤을 멈추게 함']],
-  ['공감',(v,f)=>[`${v.pp}, 나만 그래?`,`${J.로(f.brand)} 해결했어요`,'타겟 본인의 목소리로 동일시 유도']],
-  ['해결 제시',(v,f)=>[`${v.pp} 끝!`,`답은 ${v.kw}`,'문제→해결을 짧게 끊어 USP 인지']],
-  ['질문형',(v,f)=>[`혹시 ${v.pp}?`,`${v.usp} 써보셨나요?`,'질문으로 자기 해당 여부 판단 유도']],
-  ['비포/애프터',(v,f)=>[`${v.pp}, 이제 안녕`,`${f.brand}의 ${v.kw}`,'전후 대비로 효용을 상상하게 함']],
-  ['손실회피',(v,f)=>[`${v.pp}, 또 참아요?`,`오늘부터 ${J.로(f.brand)}`,'변하지 않을 때의 손해 강조']],
-  ['타겟 호명',(v,f)=>[`${f.targetKw}의 선택`,`${v.usp}, ${f.brand}`,'타겟을 호명해 "내 얘기"로 인식']],
-  ['이유 제시',(v,f)=>[`${J.을(f.brand)} 고르는 이유`,`${v.usp}, 그래서 ${v.kw}`,'선택 근거(RTB)를 전면 배치']],
-  ['브랜드 선언',(v,f)=>[`이게 바로 ${v.kw}`,`${f.brand}의 ${v.usp}`,'USP를 브랜드 정체성으로 연결']],
-  ['감성/약속',(v,f)=>[`매일이 ${v.kw}`,`${J.이(f.brand)} 지킬게요`,'불편이 사라진 상태를 약속']]
-];
-function ruleCopies(v,f){return ANGLES.map(([ang,fn])=>{const [m,s,w]=fn(v,f);return {angle:ang,main:m,sub:s,why:w}})}
+const ANGLES=[['문제제기','익숙한 불편을 짚어 스크롤을 멈추게 함'],['공감','타겟 본인의 목소리로 동일시 유도'],['해결 제시','문제→해결을 짧게 끊어 컨셉 인지'],['질문형','질문으로 자기 해당 여부 판단 유도'],['비포/애프터','전후 대비로 효용을 상상하게 함'],['손실회피','변하지 않을 때의 손해 강조'],['타겟 호명','타겟을 호명해 "내 얘기"로 인식'],['이유 제시','선택 근거(RTB)를 전면 배치'],['브랜드 선언','컨셉을 브랜드 정체성으로 연결'],['감성/약속','불편이 사라진 상태를 약속']];
+/* 톤앤무드별 템플릿 (ANGLES 순서와 동일) — x:{pp,usp,kw,b(브랜드),tk(타겟),cat} */
+const TONES={
+ '친근':{desc:'말 걸듯 편안한 대화체',ex:'피부 트러블, 나만 그래?',ai:'친구에게 말 걸듯 편안한 해요체·반말 혼용, 가벼운 구어체',t:[
+  x=>[`아직도 ${x.pp}?`,`${J.로(x.usp)} 바꿔보세요`], x=>[`${x.pp}, 나만 그래?`,`${J.로(x.b)} 해결했어요`], x=>[`${x.pp} 끝!`,`답은 ${x.kw}`],
+  x=>[`혹시 ${x.pp}?`,`${x.usp} 써보셨나요?`], x=>[`${x.pp}, 이제 안녕`,`${x.b}의 ${x.kw}`], x=>[`${x.pp}, 또 참아요?`,`오늘부터 ${J.로(x.b)}`],
+  x=>[`${x.tk}의 선택`,`${x.usp}, ${x.b}`], x=>[`${J.을(x.b)} 고르는 이유`,`${x.usp}, 그래서 ${x.kw}`], x=>[`이게 바로 ${x.kw}`,`${x.b}의 ${x.usp}`], x=>[`매일이 ${x.kw}`,`${J.이(x.b)} 지킬게요`]]},
+ '신뢰':{desc:'전문적이고 믿음직한 합니다체',ex:'피부 트러블, 원인부터',ai:'전문가가 설명하듯 차분한 합니다체, 근거·설계·기준 같은 신뢰 어휘',t:[
+  x=>[`${x.pp}, 원인부터`,`${J.로(x.usp)} 설계했습니다`], x=>[`${x.pp}, 모두의 고민`,`${J.이(x.b)} 답을 찾았습니다`], x=>[`해답은 ${x.kw}`,`${x.pp}엔 ${x.usp}`],
+  x=>[`${x.pp} 줄이는 법?`,`${x.b}의 ${x.kw}`], x=>[`${x.pp} → ${x.kw}`,`${x.usp}의 차이`], x=>[`${x.pp}, 방치 금지`,`${J.로(x.usp)} 관리하세요`],
+  x=>[`${J.을(x.tk)} 위한 설계`,`${x.b} ${x.kw}`], x=>[`선택의 근거`,`${x.usp}, ${x.b}`], x=>[`${x.kw}, 새로운 기준`,`${x.b}${x.cat?' '+x.cat:''}`], x=>[`꾸준히, ${x.kw}`,`${J.이(x.b)} 함께합니다`]]},
+ '감성':{desc:'다정하고 서정적인 문장',ex:'피부 트러블에 지친 날',ai:'다정하고 서정적인 문장, 장면과 감정을 그리는 표현, 부드러운 종결',t:[
+  x=>[`${x.pp}에 지친 날`,`${J.이(x.usp)} 곁에 있어요`], x=>[`${x.pp}, 참았던 날들`,`이제 ${x.b}에 기대요`], x=>[`${x.pp} 대신 ${x.kw}`,`조용히 달라지는 하루`],
+  x=>[`오늘, 편안했나요?`,`${x.b}의 ${x.kw}`], x=>[`${J.이(x.pp)} 머물던 자리`,`이제 ${x.kw}`], x=>[`더는 참지 않기로 해요`,`${x.pp} 대신 ${x.kw}`],
+  x=>[`${x.tk}, 당신의 하루에`,`${J.을(x.kw)} 선물해요`], x=>[`${J.을(x.b)} 고른 마음`,`${x.usp}, 작은 다정함`], x=>[`하루의 끝, ${x.kw}`,x.b], x=>[`매일 곁에, ${x.kw}`,`${J.이(x.b)} 함께할게요`]]},
+ '위트':{desc:'재치 있고 도발적인 한 방',ex:'피부 트러블? 옛날 얘기',ai:'재치 있고 도발적인 말장난·밈 감성, 짧은 펀치라인 (비하·과장 금지)',t:[
+  x=>[`${x.pp}? 옛날 얘기`,`요즘은 ${x.kw}`], x=>[`${x.pp}, 실화냐`,`${x.b} 쓰고 조용해짐`], x=>[`${x.pp}, 퇴출!`,`${x.kw} 등판`],
+  x=>[`${x.pp} 참는 사람?`,`손 내리고 ${x.b}`], x=>[`${x.pp} → 실종`,`범인은 ${x.kw}`], x=>[`${x.pp}에 또 져?`,`${J.로(x.b)} 역전`],
+  x=>[`${x.tk}, 이거 알아?`,`${x.kw} 모르면 손해`], x=>[`${x.b}? 이유 있음`,`${x.usp}, 끝`], x=>[`${x.kw}, 들어봤니?`,`${J.이(x.b)} 만들었지`], x=>[`${J.과(x.pp)} 절교`,`${x.b}랑 매일`]]},
+ '직설':{desc:'군더더기 없는 단문',ex:'피부 트러블 끝.',ai:'군더더기 없는 단문, 마침표로 끊는 직설 화법, 수식어 최소화',t:[
+  x=>[`${x.pp}?`,`${x.usp}.`], x=>[`${x.pp}, 지겹다.`,`${x.b}.`], x=>[`${x.pp} 끝.`,`${x.kw}.`],
+  x=>[`${x.pp}, 계속?`,`${J.로(x.b)}.`], x=>[`${x.pp} → ${x.kw}`,`${x.b}.`], x=>[`참지 마세요.`,`${x.pp} 끝, ${x.kw}.`],
+  x=>[`${J.이라면(x.tk)}.`,`${x.kw}.`], x=>[`이유는 하나.`,`${x.usp}.`], x=>[`${x.kw}.`,`${x.b}.`], x=>[`매일, ${x.kw}.`,`${x.b}.`]]},
+ '프리미엄':{desc:'절제되고 세련된 무드',ex:'피부 트러블에서 자유롭게',ai:'절제되고 세련된 하이엔드 무드, 여백 있는 짧은 문장, 과한 감탄·이모지 금지',t:[
+  x=>[`${x.pp}에서 자유롭게`,`${x.b} ${x.kw}`], x=>[`사소한 ${x.pp}까지`,`${J.이(x.b)} 생각했습니다`], x=>[`${x.kw}, 하나의 해답`,`${x.usp}의 품격`],
+  x=>[`당신의 기준은?`,`${x.kw}, ${x.b}`], x=>[`${x.pp} 없는 일상`,`${x.kw}의 시작`], x=>[`타협하지 마세요`,`${x.pp} 앞에서도`],
+  x=>[`${x.tk}의 새로운 기준`,`${x.b} ${x.kw}`], x=>[`디테일이 다릅니다`,x.usp], x=>[x.kw,`${J.이(x.b)} 정의하는 기준`], x=>[`매일의 품격, ${x.kw}`,x.b]]}
+};
+let tone='친근';
+function renderTones(){
+  $('#tones').innerHTML=Object.entries(TONES).map(([k,t])=>`<button data-t="${k}" class="${k===tone?'on':''}"><b>${k}</b><small>${t.desc}</small><i>${esc(t.ex)}</i></button>`).join('');
+  document.querySelectorAll('#tones button').forEach(b=>b.onclick=()=>{tone=b.dataset.t;renderTones();saveDraft();
+    if(copies.length&&mode==='rule'){copies=ruleCopies(vps[sel],getForm());renderCopies();toast(`'${tone}' 톤으로 다시 뽑았어요`)}
+    else if(copies.length) toast("AI 모드는 '다시 뽑기'를 눌러 적용하세요");});
+}
+function ruleCopies(v,f){
+  const x={pp:v.pp,usp:v.usp,kw:v.kw,b:f.brand,tk:f.targetKw,cat:f.category};const T=TONES[f.tone]||TONES['친근'];
+  return ANGLES.map(([ang,why],i)=>{const [m,s]=T.t[i](x);return {angle:ang,main:m,sub:s,why}});
+}
 
 /* ---------- AI engine ---------- */
 async function callClaude(prompt){
@@ -495,7 +527,7 @@ async function callClaude(prompt){
   return JSON.parse(m[0]);
 }
 function brief(f){
-  return `[브랜드명] ${f.brand}\n[카테고리] ${f.category||'-'}\n[톤앤매너] ${f.tone}\n[브랜드 소개] ${f.about||'-'}\n[필수/금지 표현] ${f.rules||'-'}\n[USP]\n${f.usps.map((u,i)=>`USP ${i+1}. ${u.k||u.t}${u.t?' — '+u.t:''}`).join('\n')}\n[타겟] ${f.targetKw}${f.target?' — '+f.target:''}\n[USP × Pain Point 매칭]\n${pairs(f).map(x=>`${x.pair}: USP ${x.ui+1}(${x.u.k}) × P.P ${x.no}(${x.p.k}${x.p.t?' — '+x.p.t:''})`).join('\n')}`;
+  return `[브랜드명] ${f.brand}\n[카테고리] ${f.category||'-'}\n[브랜드 소개] ${f.about||'-'}\n[필수/금지 표현] ${f.rules||'-'}\n[USP]\n${f.usps.map((u,i)=>`USP ${i+1}. ${u.k||u.t}${u.t?' — '+u.t:''}`).join('\n')}\n[타겟] ${f.targetKw}${f.target?' — '+f.target:''}\n[USP × Pain Point 매칭]\n${pairs(f).map(x=>`${x.pair}: USP ${x.ui+1}(${x.u.k}) × P.P ${x.no}(${x.p.k}${x.p.t?' — '+x.p.t:''})`).join('\n')}`;
 }
 async function aiVPs(f){
   const p=`당신은 한국 광고대행사의 시니어 크리에이티브 디렉터입니다. 아래 [USP × Pain Point 매칭] 쌍마다 VP(Value Proposition) "컨셉 이름"을 3개씩 만드세요.
@@ -531,7 +563,8 @@ async function aiCopies(v,f){
 - 10개 소구 각도(angle) 순서: 문제제기, 공감, 해결 제시, 질문형, 비포/애프터, 손실회피, 타겟 호명, 이유 제시, 숫자/구체화, 감성/약속
 - 숫자/구체화는 브랜드 정보에 있는 사실만 사용 (없으면 구체적 상황 묘사)
 - why: 의도 15자 내외
-- 선택된 VP의 약속에서 벗어나지 말 것, 필수/금지 표현 준수, 근거 없는 최상급·효능 단정 금지, 톤앤매너 반영
+- [카피 톤앤무드] ${f.tone} — ${(TONES[f.tone]||TONES['친근']).ai}. 10개 모두 이 톤을 일관되게 유지할 것
+- 선택된 VP의 약속에서 벗어나지 말 것, 필수/금지 표현 준수, 근거 없는 최상급·효능 단정 금지
 JSON만 출력:
 {"copies":[{"angle":"","main":"","sub":"","why":""}]}
 
@@ -545,7 +578,7 @@ ${brief(f)}`;
 }
 
 /* ---------- render ---------- */
-function resetOut(){vps=[];copies=[];$('#vpOut').innerHTML='<div class="empty">왼쪽에 USP · 타겟 · Pain Point를 입력하고<br><b>VP 자동 생성</b>을 눌러주세요.</div>';$('#vpBar').hidden=true;$('#copyCard').hidden=true}
+function resetOut(){vps=[];copies=[];$('#vpOut').innerHTML='<div class="empty">왼쪽에 USP · 타겟 · Pain Point를 입력하고<br><b>VP 자동 생성</b>을 눌러주세요.</div>';$('#vpBar').hidden=true;$('#toneBox').hidden=true;$('#copyCard').hidden=true}
 function renderVPs(){
   const groups=[];vps.forEach((v,i)=>{let g=groups.find(x=>x.pair===v.pair);if(!g){g={pair:v.pair,usp:v.usp,pp:v.pp,items:[]};groups.push(g)}g.items.push(i)});
   $('#vpOut').innerHTML=groups.map(g=>`<div class="vpgrp"><div class="vpgh"><span class="pn">${esc(g.pair)}</span>USP <b>${esc(g.usp)}</b> + P.P <b>${esc(g.pp)}</b> = VP 컨셉 3안</div><div class="vpcards">`+
@@ -559,12 +592,12 @@ function renderVPs(){
   document.querySelectorAll('.vp').forEach(el=>el.onclick=()=>{sel=+el.dataset.i;renderVPs()});
   $('#vpEdit').value=vps[sel]?vps[sel].kw:'';
   $('#vpEdit').oninput=e=>{vps[sel].kw=e.target.value;const c=document.querySelector('.vp.on');c.querySelector('.kwv').textContent=e.target.value};
-  $('#vpBar').hidden=false;
+  $('#vpBar').hidden=false;$('#toneBox').hidden=false;
 }
 const lenCls=(n,max)=>n<=max?'ok':'warn';
 function renderCopies(){
   const f=getForm();const v=vps[sel];
-  $('#sum').innerHTML=`<strong>${esc(f.brand)}</strong> · VP <strong>${esc(v.kw)}</strong> ${(v.tags||[]).map(esc).join(' ')}<br>메인 ${MAIN_MAX}자 · 서브 ${SUB_MAX}자 이내 권장 (초과 시 주황색 표시, 내부 권장값)`;
+  $('#sum').innerHTML=`<strong>${esc(f.brand)}</strong> · VP <strong>${esc(v.kw)}</strong> · 톤 <strong>${esc(f.tone)}</strong><br>메인 ${MAIN_MAX}자 · 서브 ${SUB_MAX}자 이내 권장 (초과 시 주황색 표시, 내부 권장값)`;
   $('#copyOut').innerHTML=copies.map((c,i)=>`<div class="cp ${c.star?'star':''}" data-i="${i}">
     <div class="meta"><span class="no">${String(i+1).padStart(2,'0')}</span><span class="ang">${esc(c.angle)}</span><span class="len ${lenCls(c.main.length,MAIN_MAX)}">${c.main.length}/${c.sub.length}자</span></div>
     <div class="main" contenteditable="true" data-k="main">${esc(c.main)}</div>
@@ -611,7 +644,7 @@ $('#csv').onclick=()=>{
   const blob=new Blob(['﻿'+rows.map(r=>r.map(q).join(',')).join('\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${f.brand||'brand'}_컨셉카피.csv`;a.click();
 };
-$('#sample').onclick=()=>{setForm({brand:'순면하루',category:'생리대',tone:'친근·대화체',about:'유기농 순면 커버와 무향 설계를 내세운 생리대 브랜드. 스마트스토어·자사몰 판매.',rules:'최상급(최고·1위) 표현 금지',
+$('#sample').onclick=()=>{setForm({brand:'순면하루',category:'생리대',tone:'친근',about:'유기농 순면 커버와 무향 설계를 내세운 생리대 브랜드. 스마트스토어·자사몰 판매.',rules:'최상급(최고·1위) 표현 금지',
   usps:[{k:'유기농 순면 커버',t:'100% 유기농 순면 커버로 피부 자극 최소화'},{k:'향료·표백 제로',t:'향료·염소표백 없는 설계'}],demo:{g:'여성',ages:['20','30']},target:'민감한 피부의 직장인',
   pps:[{k:'피부 트러블',t:'오래 착용하면 생기는 피부 트러블',u:0},{k:'냄새 걱정',t:'하루 종일 신경 쓰이는 냄새',u:1}]});resetOut();toast('예시를 채웠어요')};
 
