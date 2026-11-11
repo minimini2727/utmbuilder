@@ -90,7 +90,17 @@ textarea{resize:vertical;min-height:72px}
 .brandbar select{flex:1}
 .empty{border:1px dashed var(--line);border-radius:12px;padding:28px;text-align:center;color:var(--sub);font-size:14px}
 .vp{border:1.5px solid var(--line);border-radius:12px;padding:14px 14px 12px;cursor:pointer;position:relative;background:var(--panel)}
-.vp+.vp{margin-top:10px}
+.vpgrp+.vpgrp{margin-top:18px}
+.vpgh{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--sub);margin-bottom:8px}
+.vpgh .pn{font-weight:800;color:var(--panel);background:var(--accent);border-radius:6px;padding:2px 8px}
+.vpgh b{color:var(--ink)}
+.vpcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.vp .tech{display:inline-block;font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;background:var(--chip);color:var(--sub)}
+.vp .fml{display:flex;align-items:center;gap:5px;flex-wrap:wrap;font-size:12px;color:var(--sub);margin-bottom:6px}
+.vp .fml span{background:var(--chip);border-radius:6px;padding:2px 7px}
+.vp .fml em{font-style:normal;font-weight:800;color:var(--accent)}
+.vp .mean{font-size:12.5px;color:var(--sub);line-height:1.5}
+.vpnote{font-size:12px;color:var(--sub);margin-top:12px}
 .vp.on{border-color:var(--accent);background:var(--accent-soft)}
 .vp .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;background:var(--chip);color:var(--sub);margin-right:4px}
 .vp .head{font-size:17px;font-weight:800;letter-spacing:-.02em;margin:8px 0 4px}
@@ -253,7 +263,7 @@ footer{max-width:1280px;margin:0 auto;padding:0 16px 30px;color:var(--sub);font-
       <summary>작성 가이드 — VP는 이렇게 만들어져요</summary>
       <ul>
         <li>VP(Value Proposition) = 타겟의 Pain Point를 브랜드 USP로 해결해 주는 약속</li>
-        <li>VP는 한눈에 읽히는 키워드형(예: 트러블 없는 유기농 순면)과 해시태그 3개로 정리돼요</li>
+        <li>VP는 단어를 이어 붙이지 않고, 해결된 상태를 부를 수 있는 컨셉 이름으로 만들어요 (예: 새벽배송 + 늦은 택배 불편함 = 슈팅배송)</li>
         <li>P.P마다 매칭한 USP와 짝지어(1-1, 2-2 …) 쌍마다 VP를 1개씩 만들고, 1개를 골라 컨셉 카피 10개로 확장</li>
         <li>카피는 메인 15자·서브 20자 이내를 목표로(내부 권장값) 소구 각도를 모두 다르게 구성해 A/B 테스트에 바로 쓰기 좋게 했어요</li>
         <li>카드의 메인/서브 카피는 클릭해서 바로 수정할 수 있어요</li>
@@ -265,7 +275,7 @@ footer{max-width:1280px;margin:0 auto;padding:0 16px 30px;color:var(--sub);font-
 <!-- RIGHT: output -->
 <section>
   <div class="card">
-    <div class="sechead"><h3>STEP 3 · VP 후보</h3><span class="sp"></span><span class="hint" id="vpHint">1개를 선택하세요</span></div>
+    <div class="sechead"><h3>STEP 3 · VP 후보</h3><span class="sp"></span><span class="hint" id="vpHint">매칭 쌍마다 컨셉 3개 · 1개를 선택하세요</span></div>
     <div id="vpOut"><div class="empty">왼쪽에 USP · 타겟 · Pain Point를 입력하고<br><b>VP 자동 생성</b>을 눌러주세요.</div></div>
     <div class="bar" id="vpBar" hidden>
       <button class="btn wide" id="genCopy">선택한 VP로 컨셉 카피 10개 뽑기</button>
@@ -402,30 +412,72 @@ const J={
 };
 
 /* ---------- rule engine ---------- */
-const VP_PATTERNS=[
-  (u,p)=>`${p} 없는 ${u}`.replace(/제로 없는/,'제로'),
-  (u,p)=>`${p}엔 ${u}`,
-  (u,p)=>`${J.로(u)} ${p} 끝`
+/* 컨셉 사전: P.P에서 문제 유형을 읽고, 해결된 상태를 '이름'으로 만든다 */
+const THEMES=[
+ {id:'speed',label:'속도',re:/늦|느리|지연|기다|오래 걸리|배송|택배|도착|대기|속도/g,words:['번개','총알','직진','순삭','쾌속','광속'],phrases:['기다림 제로','눈뜨면 도착','바로 도착']},
+ {id:'gentle',label:'저자극',re:/트러블|자극|가려|따가|민감|뒤집|발진|붉|건조|각질|피부/g,neg:1,words:['순둥','솜결','보들','베이비','무자극'],phrases:['피부 휴가','피부 쉼표','순둥 모드']},
+ {id:'fresh',label:'청결',re:/냄새|악취|향|비린|찝찝|위생|세균|오염/g,neg:1,words:['뽀송','산뜻','클린','상쾌'],phrases:['냄새 OFF','뽀송 리셋','클린 타임']},
+ {id:'breath',label:'통기',re:/답답|덥|더워|땀|습|꿉꿉|통풍|열감|갑갑/g,words:['숨쉬는','에어','쿨링','바람결'],phrases:['숨 쉬는 하루','바람 모드','에어 타임']},
+ {id:'value',label:'가성비',re:/비싸|가격|비용|부담|돈|요금|가성비|할인/g,words:['착한','알뜰','합리','부담제로'],phrases:['지갑 해방','부담 OFF','착한 선택']},
+ {id:'easy',label:'간편',re:/복잡|어렵|귀찮|번거|헷갈|손이 많|설치|준비/g,words:['원터치','한방','올인원','원클릭','간편'],phrases:['한 번에 끝','손 안 가는 하루','원터치 완성']},
+ {id:'safe',label:'안심',re:/불안|걱정|샐까|새는|샘|실패|의심|못 믿|안전|사고|유해/g,neg:1,words:['안심','철벽','든든','방패'],phrases:['걱정 OFF','철벽 가드','안심 모드']},
+ {id:'light',label:'가벼움',re:/무겁|부피|크기|들고 다|휴대|짐/g,words:['깃털','초경량','포켓','미니'],phrases:['깃털 무게','주머니 쏙','가벼운 하루']},
+ {id:'last',label:'지속',re:/금방|지워|빠지|무너|망가|오래 못|번짐|변색|늘어/g,neg:1,words:['종일','롱래스팅','튼튼','변함없는'],phrases:['하루 종일 그대로','처음 그대로','변함없는 하루']},
+ {id:'comfort',label:'편안함',re:/피로|아프|아픈|통증|결림|저림|붓|쑤시|뻐근|불편한 착용|배기|조이/g,neg:1,words:['구름','폭신','말랑','마시멜로'],phrases:['구름 위 산책','발 쉼표','폭신 모드']},
+ {id:'fit',label:'핏',re:/사이즈|안 맞|끼|헐렁|핏이|길이|체형/g,words:['딱핏','인생핏','맞춤'],phrases:['내 몸에 딱','인생핏 발견','체형 맞춤']},
+ {id:'style',label:'스타일',re:/촌스|뻔한|코디|스타일|유행|디자인|핏|개성|옷|패션|입을/g,words:['꾸안꾸','데일리','시그니처','무드','레이어드'],phrases:['꾸안꾸 완성','오늘의 무드','데일리 시그니처']},
+ {id:'time',label:'시간절약',re:/바쁘|시간 없|아침|출근|짬|여유/g,words:['모닝','퀵','짬','타임세이브'],phrases:['바쁜 아침 루틴','짬 내서 완성','여유 한 스푼']}
 ];
+const DEF_THEME={id:'base',label:'맞춤',words:['딱맞춤','데일리','스마트','마이'],phrases:['나만의 루틴','딱 맞는 하루','내 편 솔루션']};
+const NOUNS=['배송','커버','패드','크림','세럼','마스크','팩','원단','소재','케어','밴드','매트','가디건','니트','팬츠','셔츠','재킷','코트','백','슈즈','생리대','기저귀','렌즈','앱','상담','클래스','요금제','보험','카드','대출','도시락','밀키트','샴푸','토너','로션','쿠션','틴트','침구','이불','베개','의자','청소기','서비스'];
+const BADNOUN=/^(제로|설계|공법|기술|시스템|구조|성분|함유|무첨가|인기|퀄리티|품질|가격|최저가|프리|free)$/i;
+const GENERIC_PP=/^(불편함?|걱정|고민|스트레스|문제|불만|짜증|불안)$/;
+function themeOf(x){
+  const txt=[x.p.k,x.p.t].join(' ');let best=null,score=0;
+  THEMES.forEach(t=>{const n=(txt.match(t.re)||[]).length;if(n>score){score=n;best=t}});
+  if(!best){THEMES.forEach(t=>{const n=([x.u.k,x.u.t].join(' ').match(t.re)||[]).length;if(n>score){score=n;best=t}})}
+  return best||DEF_THEME;
+}
+function nounOf(u,f){
+  const tk=String(u.k).split(/\s+/).filter(Boolean);const last=(tk[tk.length-1]||'').replace(/[·,]/g,'');
+  if(!last||BADNOUN.test(last)) return f.category||'케어';
+  const hit=NOUNS.find(n=>last.endsWith(n));if(hit) return hit;
+  if(last.length<=4) return last;
+  return f.category||last.slice(-2);
+}
+function coreOf(p){const tk=String(p.k).split(/\s+/).filter(t=>t&&!GENERIC_PP.test(t));return (tk[tk.length-1]||'').replace(/(함|움|음)$/,m=>m)}
+const join2=(a,b)=>(a.length+b.length<=5&&!/\s/.test(a))?a+b:a+' '+b;
+function conceptsFor(x,f,k){
+  const th=themeOf(x),n=nounOf(x.u,f),core=coreOf(x.p),out=[];
+  const w=i=>th.words[(k+i)%th.words.length], ph=i=>th.phrases[(k+i)%th.phrases.length];
+  out.push({tech:'조어형',kw:join2(w(0),n),meaning:`'${th.label}' 이미지를 ${n}에 붙여 ${x.p.k} 해결을 한 단어로 압축`});
+  out.push({tech:'은유형',kw:ph(0),meaning:`${J.이(x.p.k)} 사라진 상태를 은유적 장면으로 이름 붙임`});
+  if(th.neg&&core&&core.length<=3) out.push({tech:'반전형',kw:'노'+core+' '+n,meaning:`불편(${core})을 지운 상태 자체를 컨셉 이름으로`});
+  else out.push({tech:'조어형 B',kw:join2(w(1),n),meaning:`다른 '${th.label}' 어휘로 같은 해결을 변주`});
+  const seen=new Set();return out.filter(o=>!seen.has(o.kw)&&seen.add(o.kw)).map(o=>({...o,theme:th.label}));
+}
 function pairs(f){
   return f.pps.map(p=>{const u=f.usps[p.u]||f.usps[0];return {u:{k:u.k||u.t,t:u.t},p:{k:p.k||p.t,t:p.t},ui:p.u,no:p.no,pair:`${p.u+1}-${p.no}`}}).filter(x=>x.u.k&&x.p.k);
 }
 function ruleVPs(f){
-  return pairs(f).map((x,i)=>{const fn=VP_PATTERNS[(i+seed)%VP_PATTERNS.length];return {
-    pair:x.pair,kw:fn(x.u.k,x.p.k),tags:[tag(x.u.k),tag(x.p.k+'해결'),tag(f.brand)],
-    stmt:`${J.이(f.targetKw)} 겪는 ${J.을(x.p.k)} ${J.로(x.u.k)} 해결하는 ${f.brand}`,usp:x.u.k,pp:x.p.k}});
+  const res=[];
+  pairs(f).forEach((x,i)=>conceptsFor(x,f,seed+i).forEach(c=>res.push({
+    pair:x.pair,kw:c.kw,tech:c.tech,meaning:c.meaning,usp:x.u.k,pp:x.p.k,
+    tags:[tag(c.kw),tag(c.theme+'케어')],
+    stmt:`${J.이(f.targetKw)} 겪는 ${J.을(x.p.k)} ${J.로(x.u.k)} 해결하는 '${c.kw}'`})));
+  return res;
 }
 const ANGLES=[
   ['문제제기',(v,f)=>[`아직도 ${v.pp}?`,`${J.로(v.usp)} 바꿔보세요`,'익숙한 불편을 짚어 스크롤을 멈추게 함']],
   ['공감',(v,f)=>[`${v.pp}, 나만 그래?`,`${J.로(f.brand)} 해결했어요`,'타겟 본인의 목소리로 동일시 유도']],
-  ['해결 제시',(v,f)=>[`${v.pp} 끝!`,`답은 ${v.usp}`,'문제→해결을 짧게 끊어 USP 인지']],
+  ['해결 제시',(v,f)=>[`${v.pp} 끝!`,`답은 ${v.kw}`,'문제→해결을 짧게 끊어 USP 인지']],
   ['질문형',(v,f)=>[`혹시 ${v.pp}?`,`${v.usp} 써보셨나요?`,'질문으로 자기 해당 여부 판단 유도']],
-  ['비포/애프터',(v,f)=>[`${v.pp}, 이제 안녕`,`${f.brand}의 ${v.usp}`,'전후 대비로 효용을 상상하게 함']],
+  ['비포/애프터',(v,f)=>[`${v.pp}, 이제 안녕`,`${f.brand}의 ${v.kw}`,'전후 대비로 효용을 상상하게 함']],
   ['손실회피',(v,f)=>[`${v.pp}, 또 참아요?`,`오늘부터 ${J.로(f.brand)}`,'변하지 않을 때의 손해 강조']],
   ['타겟 호명',(v,f)=>[`${f.targetKw}의 선택`,`${v.usp}, ${f.brand}`,'타겟을 호명해 "내 얘기"로 인식']],
-  ['이유 제시',(v,f)=>[`${J.을(f.brand)} 고르는 이유`,v.usp,'선택 근거(RTB)를 전면 배치']],
-  ['브랜드 선언',(v,f)=>[`그래서, ${f.brand}`,`${v.usp}${f.category?' · '+f.category+'의 새 기준':''}`,'USP를 브랜드 정체성으로 연결']],
-  ['감성/약속',(v,f)=>[`${v.pp} 걱정 없는 매일`,`${J.이(f.brand)} 지킬게요`,'불편이 사라진 상태를 약속']]
+  ['이유 제시',(v,f)=>[`${J.을(f.brand)} 고르는 이유`,`${v.usp}, 그래서 ${v.kw}`,'선택 근거(RTB)를 전면 배치']],
+  ['브랜드 선언',(v,f)=>[`이게 바로 ${v.kw}`,`${f.brand}의 ${v.usp}`,'USP를 브랜드 정체성으로 연결']],
+  ['감성/약속',(v,f)=>[`매일이 ${v.kw}`,`${J.이(f.brand)} 지킬게요`,'불편이 사라진 상태를 약속']]
 ];
 function ruleCopies(v,f){return ANGLES.map(([ang,fn])=>{const [m,s,w]=fn(v,f);return {angle:ang,main:m,sub:s,why:w}})}
 
@@ -446,21 +498,29 @@ function brief(f){
   return `[브랜드명] ${f.brand}\n[카테고리] ${f.category||'-'}\n[톤앤매너] ${f.tone}\n[브랜드 소개] ${f.about||'-'}\n[필수/금지 표현] ${f.rules||'-'}\n[USP]\n${f.usps.map((u,i)=>`USP ${i+1}. ${u.k||u.t}${u.t?' — '+u.t:''}`).join('\n')}\n[타겟] ${f.targetKw}${f.target?' — '+f.target:''}\n[USP × Pain Point 매칭]\n${pairs(f).map(x=>`${x.pair}: USP ${x.ui+1}(${x.u.k}) × P.P ${x.no}(${x.p.k}${x.p.t?' — '+x.p.t:''})`).join('\n')}`;
 }
 async function aiVPs(f){
-  const p=`당신은 한국 퍼포먼스 마케팅 대행사의 시니어 카피라이터입니다. 아래 [USP × Pain Point 매칭] 쌍마다 VP(Value Proposition)를 1개씩 "키워드형"으로 만드세요.
+  const p=`당신은 한국 광고대행사의 시니어 크리에이티브 디렉터입니다. 아래 [USP × Pain Point 매칭] 쌍마다 VP(Value Proposition) "컨셉 이름"을 3개씩 만드세요.
+
+VP 정의: 브랜드의 USP와 고객의 P.P를 결합해, 고객의 문제를 해결해 주는 브랜드만의 가치 제안을 '부를 수 있는 이름'으로 만든 것.
+예시: USP(새벽배송) + P.P(늦은 택배 불편함) = VP(슈팅배송) — 빠름을 '슈팅'이라는 동작 이미지로 조어화
+
 규칙:
-- kw: VP를 압축한 키워드 문구, 공백 포함 12자 이내 (예: "트러블 없는 순면", "순면으로 하루 편안"). 문장형·서술형 금지
-- tags: VP를 대표하는 해시태그 3개 (각 8자 이내, # 포함)
-- stmt: "[타겟]이 겪는 [P.P]를 [USP]로 해결하는 [브랜드]" 구조의 한 줄 정의
-- pair: 매칭 번호 그대로 (예: "1-1")
-- 반드시 해당 쌍의 USP와 P.P만 결합할 것 (다른 쌍과 섞지 말 것)
-- 필수/금지 표현 준수, 근거 없는 최상급·효능 단정 금지
+- USP 단어와 P.P 단어를 그대로 이어 붙인 문장·구절 금지 (예: "트러블 없는 순면 커버" ✗)
+- 고유명사처럼 부를 수 있는 2~8자 이름 (공백 최대 1개)
+- 3개는 서로 다른 기법: 조어(합성어), 은유/장면, 의성어·의태어, 역발상/반전, 의인화 중에서 선택
+- 해결된 '상태'나 '감각'을 이름에 담을 것
+- 실존 경쟁사·타 브랜드의 서비스명·상표(예: 로켓배송, 슈팅배송) 사용 금지
+- 근거 없는 최상급·효능 단정, 확인되지 않은 수치 금지. 필수/금지 표현 준수
+- name: 컨셉 이름 / technique: 사용한 기법 / meaning: 왜 이 이름인지 30자 이내 / tags: 해시태그 3개(# 포함, 8자 이내)
+- pair: 매칭 번호 그대로
 JSON만 출력:
-{"vps":[{"pair":"1-1","kw":"","tags":["#",""],"stmt":""}]}
+{"vps":[{"pair":"1-1","concepts":[{"name":"","technique":"","meaning":"","tags":["#"]}]}]}
 
 ${brief(f)}`;
-  const j=await callClaude(p);const ps=pairs(f);
-  return ps.map((x,i)=>{const v=(j.vps||[]).find(a=>String(a.pair)===x.pair)||(j.vps||[])[i]||{};
-    return {pair:x.pair,kw:v.kw||'',tags:(v.tags||[]).map(t=>t.startsWith('#')?t:'#'+t),stmt:v.stmt||'',usp:x.u.k,pp:x.p.k}}).filter(v=>v.kw);
+  const j=await callClaude(p);const res=[];
+  pairs(f).forEach((x,i)=>{const g=(j.vps||[]).find(a=>String(a.pair)===x.pair)||(j.vps||[])[i]||{};
+    (g.concepts||[]).slice(0,3).forEach(c=>{if(!c.name)return;res.push({pair:x.pair,kw:c.name,tech:c.technique||'',meaning:c.meaning||'',usp:x.u.k,pp:x.p.k,
+      tags:(c.tags||[]).map(t=>t.startsWith('#')?t:'#'+t),stmt:`${J.이(f.targetKw)} 겪는 ${J.을(x.p.k)} ${J.로(x.u.k)} 해결하는 '${c.name}'`})})});
+  return res;
 }
 async function aiCopies(v,f){
   const p=`당신은 한국 퍼포먼스 마케팅 대행사의 시니어 카피라이터입니다. 선택된 VP 1개로 배너·피드 광고 소재에 바로 올릴 컨셉 카피 10개를 만드세요.
@@ -475,8 +535,10 @@ async function aiCopies(v,f){
 JSON만 출력:
 {"copies":[{"angle":"","main":"","sub":"","why":""}]}
 
-[선택된 VP] ${v.kw} ${(v.tags||[]).join(' ')}
+[선택된 VP 컨셉] ${v.kw} ${(v.tags||[]).join(' ')}
+의미: ${v.meaning||''}
 정의: ${v.stmt}
+- 10개 중 4개 이상은 컨셉 이름 "${v.kw}"을 카피에 직접 넣어 컨셉을 각인시킬 것
 
 ${brief(f)}`;
   const j=await callClaude(p); return (j.copies||[]).slice(0,10);
@@ -485,14 +547,18 @@ ${brief(f)}`;
 /* ---------- render ---------- */
 function resetOut(){vps=[];copies=[];$('#vpOut').innerHTML='<div class="empty">왼쪽에 USP · 타겟 · Pain Point를 입력하고<br><b>VP 자동 생성</b>을 눌러주세요.</div>';$('#vpBar').hidden=true;$('#copyCard').hidden=true}
 function renderVPs(){
-  $('#vpOut').innerHTML=vps.map((v,i)=>`<div class="vp ${i===sel?'on':''}" data-i="${i}"><span class="radio"></span>
-    <span class="tag">VP ${esc(v.pair||i+1)}</span><span class="tag">USP: ${esc(v.usp)}</span><span class="tag">P.P: ${esc(v.pp)}</span>
-    <div class="kwv">${esc(v.kw)}</div><div class="tags">${(v.tags||[]).map(t=>`<span>${esc(t)}</span>`).join('')}</div>
-    <div class="stmt">${esc(v.stmt)}</div></div>`).join('')+
-    `<label class="f">선택한 VP 키워드 다듬기</label><input type="text" id="vpEdit" class="vpedit">`;
+  const groups=[];vps.forEach((v,i)=>{let g=groups.find(x=>x.pair===v.pair);if(!g){g={pair:v.pair,usp:v.usp,pp:v.pp,items:[]};groups.push(g)}g.items.push(i)});
+  $('#vpOut').innerHTML=groups.map(g=>`<div class="vpgrp"><div class="vpgh"><span class="pn">${esc(g.pair)}</span>USP <b>${esc(g.usp)}</b> + P.P <b>${esc(g.pp)}</b> = VP 컨셉 3안</div><div class="vpcards">`+
+    g.items.map(i=>{const v=vps[i];return `<div class="vp ${i===sel?'on':''}" data-i="${i}"><span class="radio"></span>
+    <span class="tech">${esc(v.tech||'컨셉')}</span>
+    <div class="kwv">${esc(v.kw)}</div>
+    <div class="mean">${esc(v.meaning||'')}</div>
+    <div class="tags" style="margin-top:6px">${(v.tags||[]).map(t=>`<span>${esc(t)}</span>`).join('')}</div></div>`}).join('')+`</div></div>`).join('')+
+    `<div class="vpnote">${mode==='ai'?'AI가 만든 컨셉이에요.':'기본 엔진은 P.P의 문제 유형을 읽어 컨셉 사전으로 이름을 만들어요. 더 독창적인 컨셉은 AI 모드를 권장해요.'} 집행 전 상표 중복·실제 제공 가치와의 일치 여부를 꼭 확인하세요.</div>
+    <label class="f">선택한 VP 컨셉 이름 다듬기</label><input type="text" id="vpEdit" class="vpedit">`;
   document.querySelectorAll('.vp').forEach(el=>el.onclick=()=>{sel=+el.dataset.i;renderVPs()});
   $('#vpEdit').value=vps[sel]?vps[sel].kw:'';
-  $('#vpEdit').oninput=e=>{vps[sel].kw=e.target.value;document.querySelector('.vp.on .kwv').textContent=e.target.value};
+  $('#vpEdit').oninput=e=>{vps[sel].kw=e.target.value;const c=document.querySelector('.vp.on');c.querySelector('.kwv').textContent=e.target.value};
   $('#vpBar').hidden=false;
 }
 const lenCls=(n,max)=>n<=max?'ok':'warn';
